@@ -22,6 +22,7 @@ export interface Complaint {
   id: number;
   name: string;
   phone?: string;
+  palika: string;
   ward: number;
   category: string;
   description: string;
@@ -33,6 +34,7 @@ export interface Complaint {
 export interface CreateComplaintBody {
   name: string;
   phone?: string;
+  palika: string;
   ward: number;
   category: string;
   description: string;

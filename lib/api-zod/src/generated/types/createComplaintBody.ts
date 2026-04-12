@@ -9,6 +9,7 @@
 export interface CreateComplaintBody {
   name: string;
   phone?: string;
+  palika: string;
   ward: number;
   category: string;
   description: string;

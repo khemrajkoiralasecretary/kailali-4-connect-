@@ -8,6 +8,7 @@ export const complaintsTable = pgTable("complaints", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   phone: text("phone"),
+  palika: text("palika").notNull().default(""),
   ward: integer("ward").notNull(),
   category: text("category").notNull(),
   description: text("description").notNull(),

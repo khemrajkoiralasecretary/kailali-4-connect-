@@ -260,6 +260,8 @@ components:
           type: string
         phone:
           type: string
+        palika:
+          type: string
         ward:
           type: integer
         category:
@@ -278,6 +280,7 @@ components:
       required:
         - id
         - name
+        - palika
         - ward
         - category
         - description
@@ -292,6 +295,8 @@ components:
           type: string
         phone:
           type: string
+        palika:
+          type: string
         ward:
           type: integer
         category:
@@ -300,6 +305,7 @@ components:
           type: string
       required:
         - name
+        - palika
         - ward
         - category
         - description

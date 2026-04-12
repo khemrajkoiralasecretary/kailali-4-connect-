@@ -93,7 +93,14 @@ export default function ComplaintDetail() {
               {complaint.phone && (
                 <span className="flex items-center gap-1.5"><Phone size={13} />{complaint.phone}</span>
               )}
-              <span className="flex items-center gap-1.5"><MapPin size={13} />{t("dashboard.ward")} {complaint.ward}</span>
+              {complaint.palika && (
+                <span className="flex items-center gap-1.5 capitalize">
+                  <MapPin size={13} />{complaint.palika.charAt(0).toUpperCase() + complaint.palika.slice(1)}, {t("dashboard.ward")} {complaint.ward}
+                </span>
+              )}
+              {!complaint.palika && (
+                <span className="flex items-center gap-1.5"><MapPin size={13} />{t("dashboard.ward")} {complaint.ward}</span>
+              )}
               <span className="flex items-center gap-1.5 capitalize">
                 <Tag size={13} />{CATEGORY_LABELS[language]?.[complaint.category] ?? complaint.category}
               </span>

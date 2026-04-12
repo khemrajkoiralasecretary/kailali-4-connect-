@@ -11,6 +11,7 @@ export interface Complaint {
   id: number;
   name: string;
   phone?: string;
+  palika: string;
   ward: number;
   category: string;
   description: string;

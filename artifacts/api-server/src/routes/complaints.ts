@@ -42,7 +42,10 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Invalid request body" });
   }
 
-  const [complaint] = await db.insert(complaintsTable).values(parsed.data).returning();
+  const [complaint] = await db.insert(complaintsTable).values({
+    ...parsed.data,
+    palika: parsed.data.palika ?? "",
+  }).returning();
 
   return res.status(201).json({
     ...complaint,

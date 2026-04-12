@@ -7,6 +7,13 @@ import { ArrowLeft, Send } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 
+const PALIKA_WARDS: Record<string, { label: string; labelNp: string; wards: number }> = {
+  godawari:   { label: "Godawari Municipality",        labelNp: "गोदावरी नगरपालिका",       wards: 13 },
+  gauriganga: { label: "Gauriganga Municipality",      labelNp: "गौरीगंगा नगरपालिका",     wards: 9  },
+  chure:      { label: "Chure Rural Municipality",     labelNp: "चुरे गाउँपालिका",          wards: 7  },
+  mohanyal:   { label: "Mohanyal Rural Municipality",  labelNp: "मोहन्याल गाउँपालिका",     wards: 9  },
+};
+
 const CATEGORIES_EN = ["road", "water", "electricity", "health", "education", "other"];
 const CATEGORY_LABELS: Record<string, Record<string, string>> = {
   EN: { road: "Road", water: "Water", electricity: "Electricity", health: "Health", education: "Education", other: "Other" },
@@ -22,14 +29,34 @@ export default function ComplaintNew() {
   const [form, setForm] = useState({
     name: "",
     phone: "",
-    ward: 1,
+    palika: "",
+    ward: 0,
     category: "road",
     description: "",
   });
 
+  const selectedPalika = form.palika ? PALIKA_WARDS[form.palika] : null;
+  const wardOptions = selectedPalika
+    ? Array.from({ length: selectedPalika.wards }, (_, i) => i + 1)
+    : [];
+
+  const handlePalikaChange = (value: string) => {
+    setForm({ ...form, palika: value, ward: 0 });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await mutateAsync({ data: { ...form, phone: form.phone || undefined } });
+    if (!form.palika || !form.ward) return;
+    await mutateAsync({
+      data: {
+        name: form.name,
+        phone: form.phone || undefined,
+        palika: form.palika,
+        ward: form.ward,
+        category: form.category,
+        description: form.description,
+      },
+    });
     queryClient.invalidateQueries({ queryKey: getListComplaintsQueryKey() });
     navigate("/complaints");
   };
@@ -54,9 +81,12 @@ export default function ComplaintNew() {
         onSubmit={handleSubmit}
         className="bg-card border border-border rounded-xl p-6 space-y-5"
       >
+        {/* Name + Phone */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">{t("complaints.name")} *</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              {t("complaints.name")} *
+            </label>
             <input
               required
               value={form.name}
@@ -66,7 +96,9 @@ export default function ComplaintNew() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">{t("complaints.phone")}</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              {t("complaints.phone")}
+            </label>
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -76,37 +108,83 @@ export default function ComplaintNew() {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">{t("complaints.ward")} *</label>
+        {/* Palika */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            {language === "NP" ? "पालिका" : "Palika"} *
+          </label>
+          <select
+            required
+            value={form.palika}
+            onChange={(e) => handlePalikaChange(e.target.value)}
+            className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">{language === "NP" ? "पालिका छान्नुहोस्" : "Select Palika"}</option>
+            {Object.entries(PALIKA_WARDS).map(([key, p]) => (
+              <option key={key} value={key}>
+                {language === "NP" ? p.labelNp : p.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Ward — only shown after palika is selected */}
+        {selectedPalika && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            transition={{ duration: 0.2 }}
+          >
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              {t("complaints.ward")} *
+            </label>
             <select
               required
-              value={form.ward}
+              value={form.ward || ""}
               onChange={(e) => setForm({ ...form, ward: parseInt(e.target.value) })}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((w) => (
-                <option key={w} value={w}>{t("dashboard.ward")} {w}</option>
+              <option value="">
+                {language === "NP" ? "वार्ड छान्नुहोस्" : "Select Ward"}
+              </option>
+              {wardOptions.map((w) => (
+                <option key={w} value={w}>
+                  {language === "NP" ? `वार्ड ${w}` : `Ward ${w}`}
+                </option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">{t("complaints.category")} *</label>
-            <select
-              required
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {CATEGORIES_EN.map((cat) => (
-                <option key={cat} value={cat}>{CATEGORY_LABELS[language]?.[cat] ?? cat}</option>
-              ))}
-            </select>
-          </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {language === "NP"
+                ? `${selectedPalika.labelNp} — ${selectedPalika.wards} वार्डहरू`
+                : `${selectedPalika.label} — ${selectedPalika.wards} wards`}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Category */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            {t("complaints.category")} *
+          </label>
+          <select
+            required
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {CATEGORIES_EN.map((cat) => (
+              <option key={cat} value={cat}>
+                {CATEGORY_LABELS[language]?.[cat] ?? cat}
+              </option>
+            ))}
+          </select>
         </div>
 
+        {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">{t("complaints.description")} *</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            {t("complaints.description")} *
+          </label>
           <textarea
             required
             value={form.description}
@@ -125,7 +203,7 @@ export default function ComplaintNew() {
           </Link>
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || !form.palika || !form.ward}
             className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
           >
             <Send size={15} />

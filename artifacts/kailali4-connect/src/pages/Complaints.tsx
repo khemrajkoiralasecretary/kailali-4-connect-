@@ -105,6 +105,9 @@ export default function Complaints() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-semibold text-foreground">{c.name}</span>
+                        {c.palika && (
+                          <span className="text-xs text-muted-foreground capitalize">{c.palika.charAt(0).toUpperCase() + c.palika.slice(1)}</span>
+                        )}
                         <span className="text-xs text-muted-foreground">{t("dashboard.ward")} {c.ward}</span>
                         <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full capitalize">
                           {CATEGORY_LABELS[language]?.[c.category] ?? c.category}
