@@ -7,11 +7,11 @@ import { ArrowLeft, Send } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 
-const PALIKA_WARDS: Record<string, { label: string; labelNp: string; wards: number }> = {
-  godawari:   { label: "Godawari Municipality",        labelNp: "गोदावरी नगरपालिका",       wards: 13 },
-  gauriganga: { label: "Gauriganga Municipality",      labelNp: "गौरीगंगा नगरपालिका",     wards: 9  },
-  chure:      { label: "Chure Rural Municipality",     labelNp: "चुरे गाउँपालिका",          wards: 7  },
-  mohanyal:   { label: "Mohanyal Rural Municipality",  labelNp: "मोहन्याल गाउँपालिका",     wards: 9  },
+const PALIKA_WARDS: Record<string, { label: string; labelNp: string; wards: number[]; }> = {
+  godawari:   { label: "Godawari Municipality",        labelNp: "गोदावरी नगरपालिका",    wards: Array.from({ length: 12 }, (_, i) => i + 1) },
+  gauriganga: { label: "Gauriganga Municipality",      labelNp: "गौरीगंगा नगरपालिका",  wards: Array.from({ length: 11 }, (_, i) => i + 1) },
+  chure:      { label: "Chure Rural Municipality",     labelNp: "चुरे गाउँपालिका",       wards: Array.from({ length: 6  }, (_, i) => i + 1) },
+  mohanyal:   { label: "Mohanyal Rural Municipality",  labelNp: "मोहन्याल गाउँपालिका",  wards: [5] },
 };
 
 const CATEGORIES_EN = ["road", "water", "electricity", "health", "education", "other"];
@@ -36,9 +36,7 @@ export default function ComplaintNew() {
   });
 
   const selectedPalika = form.palika ? PALIKA_WARDS[form.palika] : null;
-  const wardOptions = selectedPalika
-    ? Array.from({ length: selectedPalika.wards }, (_, i) => i + 1)
-    : [];
+  const wardOptions = selectedPalika ? selectedPalika.wards : [];
 
   const handlePalikaChange = (value: string) => {
     setForm({ ...form, palika: value, ward: 0 });
@@ -155,8 +153,8 @@ export default function ComplaintNew() {
             </select>
             <p className="text-xs text-muted-foreground mt-1">
               {language === "NP"
-                ? `${selectedPalika.labelNp} — ${selectedPalika.wards} वार्डहरू`
-                : `${selectedPalika.label} — ${selectedPalika.wards} wards`}
+                ? `${selectedPalika.labelNp} — ${selectedPalika.wards.length === 1 ? `वार्ड ${selectedPalika.wards[0]} मात्र` : `${selectedPalika.wards.length} वार्डहरू`}`
+                : `${selectedPalika.label} — ${selectedPalika.wards.length === 1 ? `Ward ${selectedPalika.wards[0]} only` : `${selectedPalika.wards.length} wards`}`}
             </p>
           </motion.div>
         )}
