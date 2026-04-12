@@ -3,13 +3,20 @@ import { useI18n } from "@/lib/i18n";
 import { useListComplaints } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Plus, Filter } from "lucide-react";
+import { Plus, Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const PALIKA_WARDS: Record<string, { label: string; labelNp: string; wards: number[] }> = {
+  godawari:   { label: "Godawari Municipality",       labelNp: "गोदावरी नगरपालिका",   wards: Array.from({ length: 12 }, (_, i) => i + 1) },
+  gauriganga: { label: "Gauriganga Municipality",     labelNp: "गौरीगंगा नगरपालिका", wards: Array.from({ length: 11 }, (_, i) => i + 1) },
+  chure:      { label: "Chure Rural Municipality",    labelNp: "चुरे गाउँपालिका",      wards: Array.from({ length: 6  }, (_, i) => i + 1) },
+  mohanyal:   { label: "Mohanyal Rural Municipality", labelNp: "मोहन्याल गाउँपालिका", wards: [5] },
+};
+
 const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-orange-100 text-orange-700 border-orange-200",
+  pending:     "bg-orange-100 text-orange-700 border-orange-200",
   in_progress: "bg-blue-100 text-blue-700 border-blue-200",
-  resolved: "bg-green-100 text-green-700 border-green-200",
+  resolved:    "bg-green-100 text-green-700 border-green-200",
 };
 
 const STATUS_LABELS: Record<string, Record<string, string>> = {
@@ -24,14 +31,38 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
 
 export default function Complaints() {
   const { t, language } = useI18n();
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [wardFilter, setWardFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [palikaFilter, setPalikaFilter] = useState("");
+  const [wardFilter, setWardFilter]     = useState("");
 
-  const params: { status?: "pending" | "in_progress" | "resolved"; ward?: number } = {};
-  if (statusFilter) params.status = statusFilter as "pending" | "in_progress" | "resolved";
-  if (wardFilter) params.ward = parseInt(wardFilter);
+  const apiParams: { status?: "pending" | "in_progress" | "resolved" } = {};
+  if (statusFilter) apiParams.status = statusFilter as "pending" | "in_progress" | "resolved";
 
-  const { data: complaints, isLoading } = useListComplaints(params);
+  const { data: raw, isLoading } = useListComplaints(apiParams);
+
+  // client-side palika + ward filter
+  const complaints = raw?.filter((c) => {
+    if (palikaFilter && c.palika !== palikaFilter) return false;
+    if (wardFilter   && c.ward  !== parseInt(wardFilter)) return false;
+    return true;
+  });
+
+  const wardOptions = palikaFilter
+    ? PALIKA_WARDS[palikaFilter]?.wards ?? []
+    : Array.from({ length: 13 }, (_, i) => i + 1); // show all possible wards when no palika chosen
+
+  const handlePalikaChange = (value: string) => {
+    setPalikaFilter(value);
+    setWardFilter(""); // reset ward when palika changes
+  };
+
+  const hasFilters = statusFilter || palikaFilter || wardFilter;
+
+  const clearAll = () => {
+    setStatusFilter("");
+    setPalikaFilter("");
+    setWardFilter("");
+  };
 
   return (
     <div className="space-y-6">
@@ -49,11 +80,13 @@ export default function Complaints() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 bg-card border border-border rounded-xl p-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Filter size={14} />
-          <span>Filter:</span>
+          <span>{language === "NP" ? "फिल्टर:" : "Filter:"}</span>
         </div>
+
+        {/* Status */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -64,22 +97,40 @@ export default function Complaints() {
           <option value="in_progress">{STATUS_LABELS[language]?.in_progress}</option>
           <option value="resolved">{STATUS_LABELS[language]?.resolved}</option>
         </select>
+
+        {/* Municipality / Palika */}
+        <select
+          value={palikaFilter}
+          onChange={(e) => handlePalikaChange(e.target.value)}
+          className="text-sm border border-border rounded-lg px-3 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">{language === "NP" ? "पालिका छान्नुहोस्" : "Municipality"}</option>
+          {Object.entries(PALIKA_WARDS).map(([key, p]) => (
+            <option key={key} value={key}>
+              {language === "NP" ? p.labelNp : p.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Ward — narrows to the chosen palika's wards */}
         <select
           value={wardFilter}
           onChange={(e) => setWardFilter(e.target.value)}
           className="text-sm border border-border rounded-lg px-3 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">{t("complaints.filterWard")}</option>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((w) => (
+          {wardOptions.map((w) => (
             <option key={w} value={w}>{t("dashboard.ward")} {w}</option>
           ))}
         </select>
-        {(statusFilter || wardFilter) && (
+
+        {hasFilters && (
           <button
-            onClick={() => { setStatusFilter(""); setWardFilter(""); }}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={clearAll}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Clear
+            <X size={13} />
+            {language === "NP" ? "हटाउनुहोस्" : "Clear"}
           </button>
         )}
       </div>
@@ -106,7 +157,11 @@ export default function Complaints() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-semibold text-foreground">{c.name}</span>
                         {c.palika && (
-                          <span className="text-xs text-muted-foreground capitalize">{c.palika.charAt(0).toUpperCase() + c.palika.slice(1)}</span>
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            {language === "NP"
+                              ? PALIKA_WARDS[c.palika]?.labelNp
+                              : PALIKA_WARDS[c.palika]?.label ?? c.palika}
+                          </span>
                         )}
                         <span className="text-xs text-muted-foreground">{t("dashboard.ward")} {c.ward}</span>
                         <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full capitalize">
@@ -116,7 +171,7 @@ export default function Complaints() {
                       <p className="text-sm text-muted-foreground mt-1 truncate">{c.description}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full border capitalize", STATUS_COLORS[c.status])}>
+                      <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full border", STATUS_COLORS[c.status])}>
                         {STATUS_LABELS[language]?.[c.status] ?? c.status}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -132,7 +187,11 @@ export default function Complaints() {
       ) : (
         <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
           <p className="text-lg font-medium">{t("common.empty")}</p>
-          <p className="text-sm mt-1">No complaints match your filters</p>
+          <p className="text-sm mt-1">
+            {hasFilters
+              ? (language === "NP" ? "फिल्टर मिल्ने उजुरी भेटिएन" : "No complaints match your filters")
+              : (language === "NP" ? "अहिलेसम्म कुनै उजुरी छैन" : "No complaints yet")}
+          </p>
         </div>
       )}
     </div>
