@@ -12,6 +12,7 @@ import Ideas from "@/pages/Ideas";
 import IdeaNew from "@/pages/IdeaNew";
 import News from "@/pages/News";
 import NewsNew from "@/pages/NewsNew";
+import Directory from "@/pages/Directory";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -35,6 +36,7 @@ function Router() {
         <Route path="/ideas" component={Ideas} />
         <Route path="/news/new" component={NewsNew} />
         <Route path="/news" component={News} />
+        <Route path="/directory" component={Directory} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
