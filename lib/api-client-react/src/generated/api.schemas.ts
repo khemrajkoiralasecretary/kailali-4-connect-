@@ -99,6 +99,48 @@ export interface WardStat {
   resolved: number;
 }
 
+export type TeamMemberRank =
+  (typeof TeamMemberRank)[keyof typeof TeamMemberRank];
+
+export const TeamMemberRank = {
+  volunteer: "volunteer",
+  coordinator: "coordinator",
+  leader: "leader",
+} as const;
+
+export interface TeamMember {
+  id: number;
+  cid: string;
+  name: string;
+  phone?: string;
+  palika: string;
+  ward: number;
+  photoUrl?: string;
+  rank: TeamMemberRank;
+  createdAt: string;
+}
+
+export interface JoinTeamBody {
+  name: string;
+  phone?: string;
+  palika: string;
+  ward: number;
+  photoUrl?: string;
+}
+
+export type UpdateRankBodyRank =
+  (typeof UpdateRankBodyRank)[keyof typeof UpdateRankBodyRank];
+
+export const UpdateRankBodyRank = {
+  volunteer: "volunteer",
+  coordinator: "coordinator",
+  leader: "leader",
+} as const;
+
+export interface UpdateRankBody {
+  rank: UpdateRankBodyRank;
+}
+
 export type ActivityItemType =
   (typeof ActivityItemType)[keyof typeof ActivityItemType];
 
@@ -128,4 +170,18 @@ export const ListComplaintsStatus = {
   pending: "pending",
   in_progress: "in_progress",
   resolved: "resolved",
+} as const;
+
+export type ListTeamMembersParams = {
+  palika?: string;
+  rank?: ListTeamMembersRank;
+};
+
+export type ListTeamMembersRank =
+  (typeof ListTeamMembersRank)[keyof typeof ListTeamMembersRank];
+
+export const ListTeamMembersRank = {
+  volunteer: "volunteer",
+  coordinator: "coordinator",
+  leader: "leader",
 } as const;

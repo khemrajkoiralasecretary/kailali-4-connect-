@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
-import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ export default function Layout({ children }: LayoutProps) {
     { href: "/ideas", label: t("nav.ideas"), icon: Lightbulb },
     { href: "/news", label: t("nav.news"), icon: Newspaper },
     { href: "/directory", label: t("nav.directory"), icon: Map },
+    { href: "/team", label: t("nav.team"), icon: Users },
   ];
 
   const isActive = (href: string) => {

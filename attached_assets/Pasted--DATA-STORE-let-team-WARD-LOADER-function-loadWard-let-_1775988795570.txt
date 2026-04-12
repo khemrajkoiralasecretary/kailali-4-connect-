@@ -1,0 +1,129 @@
+// 📦 DATA STORE
+let team = [];
+
+// 🏘 WARD LOADER
+function loadWard(){
+
+  let palika = document.getElementById("palika").value;
+  let ward = document.getElementById("ward");
+
+  ward.innerHTML = "";
+
+  let count = 0;
+
+  if(palika==="Godawari") count=12;
+  if(palika==="Gauriganga") count=11;
+  if(palika==="Chure") count=6;
+  if(palika==="Mohanyal") count=1;
+
+  for(let i=1;i<=count;i++){
+    let opt = document.createElement("option");
+    opt.innerText = "Ward " + i;
+    ward.appendChild(opt);
+  }
+}
+
+// 👥 ADD MEMBER
+function joinTeam(){
+
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let palika = document.getElementById("palika").value;
+  let ward = document.getElementById("ward").value;
+  let photo = document.getElementById("photo").files[0];
+
+  let id = "CID-" + Math.floor(Math.random()*100000);
+
+  let img = photo ? URL.createObjectURL(photo) : "https://via.placeholder.com/60";
+
+  let member = {
+    id,
+    name,
+    phone,
+    palika,
+    ward,
+    photo: img,
+    rank: "Volunteer"
+  };
+
+  team.push(member);
+
+  renderTeam();
+  updateAnalytics();
+
+  alert("Joined Successfully 🚀 ID: " + id);
+}
+
+// 🏆 RANK CHANGE (ADMIN STYLE)
+function changeRank(id, rank){
+
+  team = team.map(m=>{
+    if(m.id === id){
+      m.rank = rank;
+    }
+    return m;
+  });
+
+  renderTeam();
+  updateAnalytics();
+}
+
+// 🧾 RENDER TEAM
+function renderTeam(){
+
+  let box = document.getElementById("teamList");
+  box.innerHTML = "";
+
+  team.forEach(m=>{
+
+    let div = document.createElement("div");
+    div.className = "teamCard";
+
+    div.innerHTML = `
+      <img src="${m.photo}">
+      <div>
+        🆔 ${m.id} <br>
+        👤 ${m.name} <br>
+        📞 ${m.phone} <br>
+        📍 ${m.palika} - ${m.ward} <br>
+        🏷 ${m.rank}
+      </div>
+
+      <select class="rank" onchange="changeRank('${m.id}',this.value)">
+        <option>Rank</option>
+        <option>Volunteer</option>
+        <option>Coordinator</option>
+        <option>Leader</option>
+      </select>
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+// 📊 ANALYTICS
+function updateAnalytics(){
+
+  let total = team.length;
+  let palika = {};
+  let ward = {};
+  let rank = {};
+
+  team.forEach(m=>{
+
+    palika[m.palika] = (palika[m.palika]||0)+1;
+    ward[m.ward] = (ward[m.ward]||0)+1;
+    rank[m.rank] = (rank[m.rank]||0)+1;
+
+  });
+
+  document.getElementById("analytics").innerHTML = `
+    👥 Total: ${total} <br><br>
+
+    🏛 Palika: <pre>${JSON.stringify(palika,null,2)}</pre>
+
+    🏘 Ward: <pre>${JSON.stringify(ward,null,2)}</pre>
+
+    🏆 Rank: <pre>${JSON.stringify(rank,null,2)}</pre>
+  `;
+}

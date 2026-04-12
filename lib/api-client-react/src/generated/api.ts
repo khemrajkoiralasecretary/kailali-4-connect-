@@ -25,9 +25,13 @@ import type {
   DashboardStats,
   HealthStatus,
   Idea,
+  JoinTeamBody,
   ListComplaintsParams,
+  ListTeamMembersParams,
   NewsItem,
+  TeamMember,
   UpdateComplaintStatusBody,
+  UpdateRankBody,
   WardStat,
 } from "./api.schemas";
 
@@ -1005,6 +1009,273 @@ export function useGetWardBreakdown<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List all team members
+ */
+export const getListTeamMembersUrl = (params?: ListTeamMembersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/team?${stringifiedParams}`
+    : `/api/team`;
+};
+
+export const listTeamMembers = async (
+  params?: ListTeamMembersParams,
+  options?: RequestInit,
+): Promise<TeamMember[]> => {
+  return customFetch<TeamMember[]>(getListTeamMembersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTeamMembersQueryKey = (params?: ListTeamMembersParams) => {
+  return [`/api/team`, ...(params ? [params] : [])] as const;
+};
+
+export const getListTeamMembersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTeamMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListTeamMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTeamMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTeamMembersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTeamMembers>>> = ({
+    signal,
+  }) => listTeamMembers(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTeamMembers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListTeamMembersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTeamMembers>>
+>;
+export type ListTeamMembersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all team members
+ */
+
+export function useListTeamMembers<
+  TData = Awaited<ReturnType<typeof listTeamMembers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListTeamMembersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTeamMembers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListTeamMembersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Register a new team member
+ */
+export const getJoinTeamUrl = () => {
+  return `/api/team`;
+};
+
+export const joinTeam = async (
+  joinTeamBody: JoinTeamBody,
+  options?: RequestInit,
+): Promise<TeamMember> => {
+  return customFetch<TeamMember>(getJoinTeamUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(joinTeamBody),
+  });
+};
+
+export const getJoinTeamMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinTeam>>,
+    TError,
+    { data: BodyType<JoinTeamBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof joinTeam>>,
+  TError,
+  { data: BodyType<JoinTeamBody> },
+  TContext
+> => {
+  const mutationKey = ["joinTeam"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof joinTeam>>,
+    { data: BodyType<JoinTeamBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return joinTeam(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type JoinTeamMutationResult = NonNullable<
+  Awaited<ReturnType<typeof joinTeam>>
+>;
+export type JoinTeamMutationBody = BodyType<JoinTeamBody>;
+export type JoinTeamMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Register a new team member
+ */
+export const useJoinTeam = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinTeam>>,
+    TError,
+    { data: BodyType<JoinTeamBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof joinTeam>>,
+  TError,
+  { data: BodyType<JoinTeamBody> },
+  TContext
+> => {
+  return useMutation(getJoinTeamMutationOptions(options));
+};
+
+/**
+ * @summary Update a team member's rank
+ */
+export const getUpdateTeamRankUrl = (id: number) => {
+  return `/api/team/${id}/rank`;
+};
+
+export const updateTeamRank = async (
+  id: number,
+  updateRankBody: UpdateRankBody,
+  options?: RequestInit,
+): Promise<TeamMember> => {
+  return customFetch<TeamMember>(getUpdateTeamRankUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateRankBody),
+  });
+};
+
+export const getUpdateTeamRankMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTeamRank>>,
+    TError,
+    { id: number; data: BodyType<UpdateRankBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTeamRank>>,
+  TError,
+  { id: number; data: BodyType<UpdateRankBody> },
+  TContext
+> => {
+  const mutationKey = ["updateTeamRank"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTeamRank>>,
+    { id: number; data: BodyType<UpdateRankBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateTeamRank(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTeamRankMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateTeamRank>>
+>;
+export type UpdateTeamRankMutationBody = BodyType<UpdateRankBody>;
+export type UpdateTeamRankMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a team member's rank
+ */
+export const useUpdateTeamRank = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTeamRank>>,
+    TError,
+    { id: number; data: BodyType<UpdateRankBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateTeamRank>>,
+  TError,
+  { id: number; data: BodyType<UpdateRankBody> },
+  TContext
+> => {
+  return useMutation(getUpdateTeamRankMutationOptions(options));
+};
 
 /**
  * @summary Get recent activity feed

@@ -177,6 +177,61 @@ export const GetWardBreakdownResponseItem = zod.object({
 export const GetWardBreakdownResponse = zod.array(GetWardBreakdownResponseItem);
 
 /**
+ * @summary List all team members
+ */
+export const ListTeamMembersQueryParams = zod.object({
+  palika: zod.coerce.string().optional(),
+  rank: zod.enum(["volunteer", "coordinator", "leader"]).optional(),
+});
+
+export const ListTeamMembersResponseItem = zod.object({
+  id: zod.number(),
+  cid: zod.string(),
+  name: zod.string(),
+  phone: zod.string().optional(),
+  palika: zod.string(),
+  ward: zod.number(),
+  photoUrl: zod.string().optional(),
+  rank: zod.enum(["volunteer", "coordinator", "leader"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListTeamMembersResponse = zod.array(ListTeamMembersResponseItem);
+
+/**
+ * @summary Register a new team member
+ */
+export const JoinTeamBody = zod.object({
+  name: zod.string(),
+  phone: zod.string().optional(),
+  palika: zod.string(),
+  ward: zod.number(),
+  photoUrl: zod.string().optional(),
+});
+
+/**
+ * @summary Update a team member's rank
+ */
+export const UpdateTeamRankParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateTeamRankBody = zod.object({
+  rank: zod.enum(["volunteer", "coordinator", "leader"]),
+});
+
+export const UpdateTeamRankResponse = zod.object({
+  id: zod.number(),
+  cid: zod.string(),
+  name: zod.string(),
+  phone: zod.string().optional(),
+  palika: zod.string(),
+  ward: zod.number(),
+  photoUrl: zod.string().optional(),
+  rank: zod.enum(["volunteer", "coordinator", "leader"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
  * @summary Get recent activity feed
  */
 export const GetRecentActivityResponseItem = zod.object({

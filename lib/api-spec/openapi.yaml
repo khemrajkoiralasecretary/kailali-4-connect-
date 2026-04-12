@@ -17,6 +17,8 @@ tags:
     description: Official news and updates
   - name: dashboard
     description: Dashboard statistics and summaries
+  - name: team
+    description: Team member registry
 paths:
   /healthz:
     get:
@@ -226,6 +228,75 @@ paths:
                 items:
                   $ref: "#/components/schemas/WardStat"
 
+  /team:
+    get:
+      operationId: listTeamMembers
+      tags: [team]
+      summary: List all team members
+      parameters:
+        - name: palika
+          in: query
+          schema:
+            type: string
+        - name: rank
+          in: query
+          schema:
+            type: string
+            enum: [volunteer, coordinator, leader]
+      responses:
+        "200":
+          description: List of team members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamMember"
+    post:
+      operationId: joinTeam
+      tags: [team]
+      summary: Register a new team member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinTeamBody"
+      responses:
+        "201":
+          description: Team member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+
+  /team/{id}/rank:
+    patch:
+      operationId: updateTeamRank
+      tags: [team]
+      summary: Update a team member's rank
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRankBody"
+      responses:
+        "200":
+          description: Rank updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+        "404":
+          description: Member not found
+
   /dashboard/recent-activity:
     get:
       operationId: getRecentActivity
@@ -434,6 +505,65 @@ components:
         - ward
         - total
         - resolved
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        cid:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        palika:
+          type: string
+        ward:
+          type: integer
+        photoUrl:
+          type: string
+        rank:
+          type: string
+          enum: [volunteer, coordinator, leader]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - cid
+        - name
+        - palika
+        - ward
+        - rank
+        - createdAt
+
+    JoinTeamBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        palika:
+          type: string
+        ward:
+          type: integer
+        photoUrl:
+          type: string
+      required:
+        - name
+        - palika
+        - ward
+
+    UpdateRankBody:
+      type: object
+      properties:
+        rank:
+          type: string
+          enum: [volunteer, coordinator, leader]
+      required:
+        - rank
 
     ActivityItem:
       type: object
