@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import {
   useGetDashboardStats,
@@ -18,7 +19,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar, ShieldAlert, CalendarDays } from "lucide-react";
+import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar, ShieldAlert, CalendarDays, Wallet, TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
@@ -228,6 +229,10 @@ export default function Dashboard() {
   const { data: activity, isLoading: activityLoading } = useGetRecentActivity();
   const { data: mpProfile } = useGetMpProfile();
   const { data: allEvents = [], isLoading: eventsLoading } = useListEvents();
+  const { data: fundSummary } = useQuery<{ totalDonations: number; totalExpenses: number; balance: number }>({
+    queryKey: ["fundSummary"],
+    queryFn: () => fetch("/api/fund/summary").then(r => r.json()),
+  });
   const [mpPhotoErr, setMpPhotoErr] = useState(false);
 
   const latestEvents = [...allEvents].reverse().slice(0, 3);
@@ -299,6 +304,39 @@ export default function Dashboard() {
           <StatCard label={t("dashboard.resolved")} value={stats.resolved} icon={CheckCircle2} colorClass="bg-green-100 text-green-700" />
         </div>
       ) : null}
+
+      {/* Fund Summary */}
+      {fundSummary && (
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <Wallet size={16} className="text-primary" />
+              {language === "NP" ? "कोष सारांश" : "Fund Summary"}
+            </h3>
+            <Link href="/fund">
+              <button className="flex items-center gap-1 text-xs text-primary font-medium hover:underline">
+                {language === "NP" ? "विवरण हेर्नुस्" : "View details"}
+                <ArrowRight size={12} />
+              </button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: TrendingUp,   label: language === "NP" ? "कुल दान"   : "Donations", value: fundSummary.totalDonations, cls: "text-green-700", bg: "bg-green-50 border-green-200" },
+              { icon: TrendingDown, label: language === "NP" ? "कुल खर्च"  : "Expenses",  value: fundSummary.totalExpenses,  cls: "text-red-700",   bg: "bg-red-50 border-red-200" },
+              { icon: Scale,        label: language === "NP" ? "ब्यालेन्स" : "Balance",   value: fundSummary.balance,        cls: fundSummary.balance >= 0 ? "text-blue-700" : "text-orange-700", bg: fundSummary.balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200" },
+            ].map(c => (
+              <div key={c.label} className={`flex items-center gap-2.5 p-3 rounded-xl border ${c.bg}`}>
+                <c.icon size={16} className={c.cls} />
+                <div>
+                  <p className="text-xs text-muted-foreground">{c.label}</p>
+                  <p className={`text-sm font-bold ${c.cls}`}>Rs {Number(c.value).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Ward Breakdown Chart */}
