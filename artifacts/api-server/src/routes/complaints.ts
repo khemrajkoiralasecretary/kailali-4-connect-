@@ -9,6 +9,7 @@ import {
   UpdateComplaintStatusParams,
 } from "@workspace/api-zod";
 import { verifyToken, extractToken } from "./citizens";
+import { requireAdmin, requireSuperAdmin } from "./admin-auth";
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.post("/", async (req, res) => {
   });
 });
 
-router.delete("/all", async (_req, res) => {
+router.delete("/all", requireSuperAdmin, async (_req, res) => {
   const deleted = await db.delete(complaintsTable).returning();
   return res.json({ deleted: deleted.length });
 });
@@ -84,7 +85,7 @@ router.get("/:id", async (req, res) => {
   });
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireSuperAdmin, async (req, res) => {
   const parsed = GetComplaintParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) return res.status(400).json({ error: "Invalid complaint ID" });
 
@@ -97,7 +98,7 @@ router.delete("/:id", async (req, res) => {
   return res.json({ deleted: 1 });
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAdmin, async (req, res) => {
   const paramsParsed = UpdateComplaintStatusParams.safeParse({ id: Number(req.params.id) });
   if (!paramsParsed.success) {
     return res.status(400).json({ error: "Invalid complaint ID" });

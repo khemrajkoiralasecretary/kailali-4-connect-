@@ -82,23 +82,29 @@ function LoginGate({ onUnlock }: { onUnlock: (role: AdminRole) => void }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const creds = getCredentials();
-    let role: AdminRole | null = null;
-    if (username === "admin" && password === creds.admin) role = "super_admin";
-    else if (username === "staff" && password === creds.staff) role = "staff";
-    setTimeout(() => {
-      setLoading(false);
-      if (role) {
-        sessionStorage.setItem("admin_role", role);
-        onUnlock(role);
-      } else {
-        setError(language === "NP" ? "गलत username वा password" : "Incorrect username or password");
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(language === "NP" ? "गलत username वा password" : (data.error ?? "Incorrect username or password"));
+        return;
       }
-    }, 400);
+      sessionStorage.setItem("k4-admin-token", data.token);
+      sessionStorage.setItem("admin_role", data.role);
+      onUnlock(data.role as AdminRole);
+    } catch {
+      setError(language === "NP" ? "सर्भरसँग जडान भएन" : "Could not connect to server");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -751,21 +757,16 @@ function ChangePasswordSection() {
   const [showAdminPw, setShowAdminPw] = useState(false);
   const [showStaffPw, setShowStaffPw] = useState(false);
 
-  const handleChange = (
+  const handleChange = async (
     who: "admin" | "staff",
     form: { current: string; next: string; confirm: string },
     setMsg: (m: { ok: boolean; text: string } | null) => void,
     setForm: (f: { current: string; next: string; confirm: string }) => void
   ) => {
-    const creds = getCredentials();
-    const currentStored = who === "admin" ? creds.admin : creds.staff;
     const t = (en: string, np: string) => language === "NP" ? np : en;
 
     if (!form.current || !form.next || !form.confirm) {
       setMsg({ ok: false, text: t("All fields are required.", "सबै फिल्ड आवश्यक छ।") }); return;
-    }
-    if (form.current !== currentStored) {
-      setMsg({ ok: false, text: t("Current password is wrong.", "हालको पासवर्ड गलत छ।") }); return;
     }
     if (form.next.length < 4) {
       setMsg({ ok: false, text: t("New password must be at least 4 characters.", "नयाँ पासवर्ड कम्तिमा ४ अक्षर हुनुपर्छ।") }); return;
@@ -773,11 +774,30 @@ function ChangePasswordSection() {
     if (form.next !== form.confirm) {
       setMsg({ ok: false, text: t("Passwords do not match.", "पासवर्ड मेल खाएन।") }); return;
     }
-    const updated = who === "admin" ? { ...creds, admin: form.next } : { ...creds, staff: form.next };
-    saveCredentials(updated);
-    setForm({ current: "", next: "", confirm: "" });
-    setMsg({ ok: true, text: t("Password changed successfully!", "पासवर्ड सफलतापूर्वक परिवर्तन भयो!") });
-    setTimeout(() => setMsg(null), 3000);
+
+    const adminToken = sessionStorage.getItem("k4-admin-token") ?? "";
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": adminToken,
+        },
+        body: JSON.stringify({ account: who, currentPassword: form.current, newPassword: form.next }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg({ ok: false, text: data.error ?? t("Failed to change password.", "पासवर्ड परिवर्तन भएन।") }); return;
+      }
+      const creds = getCredentials();
+      const updated = who === "admin" ? { ...creds, admin: form.next } : { ...creds, staff: form.next };
+      saveCredentials(updated);
+      setForm({ current: "", next: "", confirm: "" });
+      setMsg({ ok: true, text: t("Password changed successfully!", "पासवर्ड सफलतापूर्वक परिवर्तन भयो!") });
+      setTimeout(() => setMsg(null), 3000);
+    } catch {
+      setMsg({ ok: false, text: t("Could not connect to server.", "सर्भरसँग जडान भएन।") });
+    }
   };
 
   const PwFields = ({
@@ -994,7 +1014,8 @@ export default function Admin() {
   const [unlocked, setUnlocked] = useState(false);
   const [role, setRole] = useState<AdminRole | null>(() => {
     const stored = sessionStorage.getItem("admin_role") as AdminRole | null;
-    if (stored) return stored;
+    const token = sessionStorage.getItem("k4-admin-token");
+    if (stored && token) return stored;
     return null;
   });
 
@@ -1019,6 +1040,7 @@ export default function Admin() {
 
   const logout = () => {
     sessionStorage.removeItem("admin_role");
+    sessionStorage.removeItem("k4-admin-token");
     setUnlocked(false);
     setRole(null);
   };

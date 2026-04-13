@@ -17,6 +17,17 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _adminTokenGetter: AuthTokenGetter | null = null;
+
+/**
+ * Register a getter that supplies an admin token. Before every fetch the getter
+ * is invoked; when it returns a non-null string, an `X-Admin-Token` header is
+ * attached to the request. Used for admin-panel API calls that require
+ * server-side role verification.
+ */
+export function setAdminTokenGetter(getter: AuthTokenGetter | null): void {
+  _adminTokenGetter = getter;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -355,6 +366,14 @@ export async function customFetch<T = unknown>(
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+    }
+  }
+
+  // Attach admin token when an admin getter is configured.
+  if (_adminTokenGetter && !headers.has("x-admin-token")) {
+    const adminToken = await _adminTokenGetter();
+    if (adminToken) {
+      headers.set("x-admin-token", adminToken);
     }
   }
 

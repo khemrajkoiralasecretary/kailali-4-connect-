@@ -8,10 +8,12 @@ import teamRouter from "./team";
 import settingsRouter from "./settings";
 import citizensRouter from "./citizens";
 import teamApplicationsRouter from "./team-applications";
+import adminAuthRouter from "./admin-auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use("/admin", adminAuthRouter);
 router.use("/complaints", complaintsRouter);
 router.use("/ideas", ideasRouter);
 router.use("/news", newsRouter);
