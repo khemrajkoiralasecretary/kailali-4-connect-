@@ -372,42 +372,43 @@ function ComplaintsTab({ role }: { role: AdminRole }) {
         <p className="text-center text-sm text-muted-foreground py-6">{language === "NP" ? "कुनै उजुरी छैन" : "No complaints found"}</p>
       ) : (
         <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-          {filtered.map(c => {
+          {filtered.map((c, i) => {
             const st = (c.status || "pending") as StatusType;
             const cfg = statusConfig[st] ?? statusConfig.pending;
             return (
-              <div key={c.id} className="flex items-start gap-3 p-3 rounded-xl border border-border hover:bg-muted/40 transition-colors">
-                <div className="flex-1 min-w-0 space-y-0.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-mono text-muted-foreground">#{c.id}</span>
-                    <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
-                    <span className="text-xs text-muted-foreground">{c.palika} / Ward {c.ward}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{c.description}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => cycleStatus(c.id, st)}
-                    title={language === "NP" ? "स्थिति परिवर्तन गर्न क्लिक गर्नुहोस्" : "Click to change status"}
-                    className={cn("px-2 py-0.5 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity", cfg.cls)}
-                  >
-                    {language === "NP" ? cfg.labelNp : cfg.label}
-                  </button>
-                  {isSuperAdmin && (
-                    confirmDelete === c.id ? (
-                      <div className="flex gap-1">
-                        <button onClick={() => { deleteOne.mutate({ id: c.id }); setConfirmDelete(null); }}
-                          className="p-1 rounded bg-red-600 text-white hover:bg-red-700"><Check size={12} /></button>
-                        <button onClick={() => setConfirmDelete(null)}
-                          className="p-1 rounded border border-border hover:bg-muted"><X size={12} /></button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setConfirmDelete(c.id)}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors">
-                        <Trash2 size={13} />
+              <div key={c.id} className="p-3 rounded-xl border border-border hover:bg-muted/40 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <span className="text-sm font-semibold text-foreground">#{i + 1} {c.name}</span>
+                      <span className="text-xs text-muted-foreground">{c.palika} / Ward {c.ward}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">{c.description}</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => cycleStatus(c.id, st)}
+                        title={language === "NP" ? "स्थिति परिवर्तन गर्न क्लिक गर्नुहोस्" : "Click to change status"}
+                        className={cn("px-3 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity", cfg.cls)}
+                      >
+                        {language === "NP" ? cfg.labelNp : cfg.label}
                       </button>
-                    )
-                  )}
+                      {isSuperAdmin && (
+                        confirmDelete === c.id ? (
+                          <div className="flex gap-1">
+                            <button onClick={() => { deleteOne.mutate({ id: c.id }); setConfirmDelete(null); }}
+                              className="p-1 rounded bg-red-600 text-white hover:bg-red-700"><Check size={12} /></button>
+                            <button onClick={() => setConfirmDelete(null)}
+                              className="p-1 rounded border border-border hover:bg-muted"><X size={12} /></button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setConfirmDelete(c.id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors">
+                            <Trash2 size={13} />
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
