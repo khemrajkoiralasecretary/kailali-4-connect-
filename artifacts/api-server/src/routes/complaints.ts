@@ -130,6 +130,7 @@ router.patch("/:id", requireAdmin, async (req, res) => {
   if (!updated) return res.status(404).json({ error: "Complaint not found" });
 
   return res.json({
+    message: "Status Updated Successfully",
     ...updated,
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
