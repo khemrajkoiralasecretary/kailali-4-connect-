@@ -10,7 +10,7 @@ import {
   useListTeamApplications, useUpdateTeamApplicationStatus, useDeleteTeamApplication,
   useListEvents, useCreateEvent, useUpdateEvent, useDeleteEvent,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, LogOut, User, Palette, Users, FileText, BarChart2,
@@ -923,6 +923,21 @@ function ApplicationsTab() {
   const qc = useQueryClient();
   const { data: applications = [], isLoading } = useListTeamApplications({});
 
+  const approveApp = useMutation({
+    mutationFn: async (id: number) => {
+      const token = sessionStorage.getItem("k4-admin-token") ?? "";
+      const res = await fetch(`/api/team-applications/${id}/approve`, {
+        method: "POST",
+        headers: { "X-Admin-Token": token },
+      });
+      if (!res.ok) throw new Error("Approve failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["listTeamApplications"] });
+      qc.invalidateQueries({ queryKey: ["listTeamMembers"] });
+    },
+  });
   const updateStatus = useUpdateTeamApplicationStatus({
     mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["listTeamApplications"] }) },
   });
@@ -948,7 +963,6 @@ function ApplicationsTab() {
           className="px-2 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none">
           <option value="">{language === "NP" ? "सबै स्थिति" : "All Status"}</option>
           <option value="pending">{language === "NP" ? "विचाराधीन" : "Pending"}</option>
-          <option value="approved">{language === "NP" ? "स्वीकृत" : "Approved"}</option>
           <option value="rejected">{language === "NP" ? "अस्वीकृत" : "Rejected"}</option>
         </select>
         <span className="text-xs text-muted-foreground ml-auto">
@@ -988,9 +1002,11 @@ function ApplicationsTab() {
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   {app.status !== "approved" && (
-                    <button onClick={() => updateStatus.mutate({ id: app.id, data: { status: "approved" } })}
-                      className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-200 rounded-lg hover:bg-green-200 transition-colors font-medium">
-                      {language === "NP" ? "स्वीकार" : "Approve"}
+                    <button
+                      onClick={() => approveApp.mutate(app.id)}
+                      disabled={approveApp.isPending}
+                      className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-200 rounded-lg hover:bg-green-200 transition-colors font-medium disabled:opacity-50">
+                      {approveApp.isPending ? "..." : language === "NP" ? "स्वीकार" : "Approve"}
                     </button>
                   )}
                   {app.status !== "rejected" && (

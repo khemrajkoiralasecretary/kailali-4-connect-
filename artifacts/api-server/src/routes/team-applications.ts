@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, teamApplicationsTable } from "@workspace/db";
+import { db, teamApplicationsTable, teamMembersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { verifyToken, extractToken } from "./citizens";
 
@@ -75,6 +75,33 @@ router.patch("/:id", async (req, res) => {
     ...updated,
     createdAt: updated.createdAt.toISOString(),
   });
+});
+
+router.post("/:id/approve", async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
+
+  const [app] = await db
+    .select()
+    .from(teamApplicationsTable)
+    .where(eq(teamApplicationsTable.id, id));
+
+  if (!app) return res.status(404).json({ error: "Application not found" });
+
+  const [member] = await db
+    .insert(teamMembersTable)
+    .values({
+      name:   app.name,
+      phone:  app.phone,
+      palika: app.palika,
+      ward:   app.ward,
+      rank:   "volunteer",
+    })
+    .returning();
+
+  await db.delete(teamApplicationsTable).where(eq(teamApplicationsTable.id, id));
+
+  return res.status(201).json({ ...member, createdAt: member.createdAt.toISOString() });
 });
 
 router.delete("/:id", async (req, res) => {
