@@ -55,19 +55,14 @@ export default function Fund() {
   const filteredDonationTotal = visibleDonations.reduce((a, d) => a + Number(d.amount), 0);
   const filteredExpenseTotal  = visibleExpenses.reduce((a, e) => a + Number(e.amount), 0);
 
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
   const chartData = useMemo(() => {
-    const map: Record<string, { date: string; Donations: number; Expenses: number }> = {};
-    donations.forEach(d => {
-      const key = String(d.date).slice(0, 10);
-      if (!map[key]) map[key] = { date: key, Donations: 0, Expenses: 0 };
-      map[key].Donations += Number(d.amount);
-    });
-    expenses.forEach(e => {
-      const key = String(e.date).slice(0, 10);
-      if (!map[key]) map[key] = { date: key, Donations: 0, Expenses: 0 };
-      map[key].Expenses += Number(e.amount);
-    });
-    return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+    const income:  number[] = new Array(12).fill(0);
+    const expense: number[] = new Array(12).fill(0);
+    donations.forEach(d => { income[new Date(d.date).getMonth()]  += Number(d.amount); });
+    expenses.forEach(e => { expense[new Date(e.date).getMonth()] += Number(e.amount); });
+    return months.map((m, i) => ({ month: m, Income: income[i], Expense: expense[i] }));
   }, [donations, expenses]);
 
   const summaryCards = applied
@@ -157,7 +152,7 @@ export default function Fund() {
       </div>
 
       {/* Chart */}
-      {chartData.length > 0 && (
+      {(donations.length > 0 || expenses.length > 0) && (
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
             <BarChart2 size={16} className="text-primary" />
@@ -166,15 +161,15 @@ export default function Fund() {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={v => `Rs ${v}`} />
               <Tooltip
                 contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 13 }}
                 formatter={(val: number) => [`Rs ${Number(val).toLocaleString()}`, undefined]}
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Donations" fill="#16a34a" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Expenses"  fill="#dc2626" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Income"  fill="#16a34a" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Expense" fill="#dc2626" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
