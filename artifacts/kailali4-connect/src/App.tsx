@@ -23,6 +23,7 @@ import About from "@/pages/About";
 import CitizenDashboard from "@/pages/CitizenDashboard";
 import TeamApply from "@/pages/TeamApply";
 import CorruptionReport from "@/pages/CorruptionReport";
+import Events from "@/pages/Events";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ function Router() {
         <Route path="/team/apply" component={TeamApply} />
         <Route path="/admin" component={Admin} />
         <Route path="/report-corruption" component={CorruptionReport} />
+        <Route path="/events" component={Events} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

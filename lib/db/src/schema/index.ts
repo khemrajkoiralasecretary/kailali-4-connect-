@@ -1,4 +1,5 @@
 export * from "./complaints";
+export * from "./events";
 export * from "./ideas";
 export * from "./news";
 export * from "./team";

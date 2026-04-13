@@ -314,3 +314,38 @@ export const ListTeamApplicationsStatus = {
   approved: "approved",
   rejected: "rejected",
 } as const;
+
+export const EventTypeEnum = {
+  festival: "festival",
+  government_program: "government_program",
+  development_update: "development_update",
+  cultural_program: "cultural_program",
+  public_notice: "public_notice",
+} as const;
+export type EventTypeEnum = (typeof EventTypeEnum)[keyof typeof EventTypeEnum];
+
+export interface EventItem {
+  id: number;
+  title: string;
+  description: string;
+  eventType: string;
+  imageUrl?: string | null;
+  eventDate?: string | null;
+  createdAt: string;
+}
+
+export interface CreateEventBody {
+  title: string;
+  description: string;
+  eventType: string;
+  imageUrl?: string;
+  eventDate?: string;
+}
+
+export interface UpdateEventBody {
+  title?: string;
+  description?: string;
+  eventType?: string;
+  imageUrl?: string;
+  eventDate?: string;
+}

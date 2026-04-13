@@ -8,6 +8,7 @@ import {
   useGetHomeContent, useUpdateHomeContent,
   useGetSocialLinks, useUpdateSocialLinks,
   useListTeamApplications, useUpdateTeamApplicationStatus, useDeleteTeamApplication,
+  useListEvents, useCreateEvent, useUpdateEvent, useDeleteEvent,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,7 +17,8 @@ import {
   Save, Trash2, Eye, EyeOff, Check, Lock, Home, Edit2, X,
   Plus, Shield, UserCheck, Search, AlertTriangle, Upload,
   Facebook, Youtube, Globe, Link2,
-  Bell, ShieldAlert, Clock, ArrowRight,
+  Bell, ShieldAlert, Clock, ArrowRight, CalendarDays,
+  PartyPopper, Landmark, Construction, Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +37,7 @@ function saveCredentials(creds: { admin: string; coord: string; leader: string }
 }
 
 type AdminRole = "super_admin" | "coordinator" | "leader";
-type TabKey = "analytics" | "alerts" | "complaints" | "team" | "applications" | "home" | "theme" | "profile";
+type TabKey = "analytics" | "alerts" | "complaints" | "team" | "applications" | "events" | "home" | "theme" | "profile";
 
 const THEMES = [
   { key: "red",    label: "Red",    labelNp: "रातो",  color: "bg-red-600" },
@@ -1220,6 +1222,214 @@ function AlertsTab() {
   );
 }
 
+// ── EVENTS TAB ────────────────────────────────────────────────────────────────
+const EVENT_TYPE_OPTIONS = [
+  { value: "festival",           labelEn: "Festival",           labelNp: "महोत्सव",              icon: PartyPopper },
+  { value: "government_program", labelEn: "Government Program", labelNp: "सरकारी कार्यक्रम",    icon: Landmark },
+  { value: "development_update", labelEn: "Development Update", labelNp: "विकास अद्यावधिक",     icon: Construction },
+  { value: "cultural_program",   labelEn: "Cultural Program",   labelNp: "सांस्कृतिक कार्यक्रम", icon: null },
+  { value: "public_notice",      labelEn: "Public Notice",      labelNp: "सार्वजनिक सूचना",     icon: Megaphone },
+];
+
+const EVENT_TYPE_BADGES: Record<string, string> = {
+  festival:           "bg-yellow-100 text-yellow-800",
+  government_program: "bg-blue-100 text-blue-800",
+  development_update: "bg-orange-100 text-orange-800",
+  cultural_program:   "bg-purple-100 text-purple-800",
+  public_notice:      "bg-red-100 text-red-800",
+};
+
+function EventsTab() {
+  const { language } = useI18n();
+  const qc = useQueryClient();
+  const { data: events = [], isLoading } = useListEvents();
+  const createEv = useCreateEvent({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/events"] }); setForm({ title: "", description: "", eventType: "public_notice", eventDate: "", imageUrl: "" }); setShowForm(false); } } });
+  const updateEv = useUpdateEvent({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/events"] }); setEditId(null); } } });
+  const deleteEv = useDeleteEvent({ mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/events"] }) } });
+
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [form, setForm] = useState({ title: "", description: "", eventType: "public_notice", eventDate: "", imageUrl: "" });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => setForm(f => ({ ...f, imageUrl: ev.target?.result as string }));
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.title.trim() || !form.description.trim()) return;
+    const payload = { title: form.title.trim(), description: form.description.trim(), eventType: form.eventType, imageUrl: form.imageUrl || undefined, eventDate: form.eventDate || undefined };
+    if (editId !== null) {
+      await updateEv.mutateAsync({ id: editId, data: payload });
+    } else {
+      await createEv.mutateAsync({ data: payload });
+    }
+  };
+
+  const startEdit = (ev: typeof events[0]) => {
+    setForm({ title: ev.title, description: ev.description, eventType: ev.eventType, eventDate: ev.eventDate ?? "", imageUrl: ev.imageUrl ?? "" });
+    setEditId(ev.id);
+    setShowForm(true);
+  };
+
+  const sorted = [...events].reverse();
+
+  return (
+    <div className="space-y-5">
+      <Section icon={CalendarDays} title={language === "NP" ? "कार्यक्रम व्यवस्थापन" : "Event Management"}>
+        <div className="flex justify-end">
+          <button
+            onClick={() => { setShowForm(s => !s); setEditId(null); setForm({ title: "", description: "", eventType: "public_notice", eventDate: "", imageUrl: "" }); }}
+            className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <Plus size={14} />
+            {language === "NP" ? "नयाँ कार्यक्रम" : "New Event"}
+          </button>
+        </div>
+
+        {showForm && (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="border border-border rounded-xl p-4 space-y-4 bg-muted/20">
+            <h3 className="text-sm font-semibold text-foreground">
+              {editId !== null
+                ? (language === "NP" ? "कार्यक्रम सम्पादन" : "Edit Event")
+                : (language === "NP" ? "नयाँ कार्यक्रम थप्नुहोस्" : "Add New Event")}
+            </h3>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{language === "NP" ? "शीर्षक" : "Title"} *</label>
+                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder={language === "NP" ? "कार्यक्रमको शीर्षक" : "Event title"} />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{language === "NP" ? "विवरण" : "Description"} *</label>
+                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  rows={3} className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  placeholder={language === "NP" ? "कार्यक्रमको विवरण" : "Event description"} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{language === "NP" ? "प्रकार" : "Event Type"}</label>
+                  <select value={form.eventType} onChange={e => setForm(f => ({ ...f, eventType: e.target.value }))}
+                    className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary">
+                    {EVENT_TYPE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {language === "NP" ? opt.labelNp : opt.labelEn}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{language === "NP" ? "मिति (वैकल्पिक)" : "Date (Optional)"}</label>
+                  <input type="text" value={form.eventDate} onChange={e => setForm(f => ({ ...f, eventDate: e.target.value }))}
+                    className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder={language === "NP" ? "जस्तै: २०८२ बैशाख १५" : "e.g. April 28, 2025"} />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{language === "NP" ? "तस्बिर (वैकल्पिक)" : "Image (Optional)"}</label>
+                <div className="mt-1 flex items-center gap-3">
+                  {form.imageUrl && (
+                    <img src={form.imageUrl} alt="preview" className="w-16 h-16 rounded-lg object-cover border border-border flex-shrink-0" />
+                  )}
+                  <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors">
+                    <Upload size={13} />
+                    {language === "NP" ? "तस्बिर छान्नुहोस्" : "Choose Image"}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
+                  {form.imageUrl && (
+                    <button type="button" onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}
+                      className="text-xs text-destructive hover:underline flex items-center gap-1">
+                      <X size={11} /> {language === "NP" ? "हटाउनुहोस्" : "Remove"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button onClick={handleSubmit} disabled={createEv.isPending || updateEv.isPending || !form.title.trim() || !form.description.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50">
+                <Save size={13} />
+                {editId !== null
+                  ? (language === "NP" ? "अद्यावधिक गर्नुहोस्" : "Update Event")
+                  : (language === "NP" ? "पोस्ट गर्नुहोस्" : "Post Event")}
+              </button>
+              <button onClick={() => { setShowForm(false); setEditId(null); }}
+                className="px-4 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors">
+                {language === "NP" ? "रद्द" : "Cancel"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => <div key={i} className="h-20 animate-pulse bg-muted rounded-xl" />)}
+          </div>
+        ) : sorted.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            {language === "NP" ? "कुनै कार्यक्रम छैन" : "No events posted yet"}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sorted.map(ev => (
+              <div key={ev.id} className="flex gap-3 p-3 rounded-xl border border-border bg-background hover:bg-muted/30 transition-colors">
+                {ev.imageUrl && (
+                  <img src={ev.imageUrl} alt={ev.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-border" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full", EVENT_TYPE_BADGES[ev.eventType] ?? "bg-muted text-muted-foreground")}>
+                        {EVENT_TYPE_OPTIONS.find(o => o.value === ev.eventType)?.[language === "NP" ? "labelNp" : "labelEn"] ?? ev.eventType}
+                      </span>
+                      <p className="font-semibold text-sm text-foreground mt-1 truncate">{ev.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{ev.description}</p>
+                      {ev.eventDate && <p className="text-xs text-muted-foreground/70 mt-1">{ev.eventDate}</p>}
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button onClick={() => startEdit(ev)} title={language === "NP" ? "सम्पादन" : "Edit"}
+                        className="w-7 h-7 rounded-lg border border-border bg-background hover:bg-muted flex items-center justify-center transition-colors">
+                        <Edit2 size={12} />
+                      </button>
+                      {confirmDelete === ev.id ? (
+                        <div className="flex gap-1">
+                          <button onClick={() => { deleteEv.mutate({ id: ev.id }); setConfirmDelete(null); }}
+                            className="px-2 py-1 rounded-lg bg-destructive text-destructive-foreground text-xs font-medium">
+                            {language === "NP" ? "हो" : "Yes"}
+                          </button>
+                          <button onClick={() => setConfirmDelete(null)}
+                            className="px-2 py-1 rounded-lg border border-border text-xs">
+                            {language === "NP" ? "नाइँ" : "No"}
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setConfirmDelete(ev.id)} title={language === "NP" ? "मेटाउनुहोस्" : "Delete"}
+                          className="w-7 h-7 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition-colors">
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+    </div>
+  );
+}
+
 // ── MAIN ADMIN COMPONENT ──────────────────────────────────────────────────────
 export default function Admin() {
   const { language } = useI18n();
@@ -1284,6 +1494,7 @@ export default function Admin() {
       { key: "applications" as TabKey, label: "Applications", labelNp: "आवेदनहरू",    icon: UserCheck },
     ] : []),
     ...(isSuperAdmin ? [
+      { key: "events" as TabKey,       label: "Events",       labelNp: "कार्यक्रम",    icon: CalendarDays },
       { key: "home" as TabKey,         label: "Home",         labelNp: "होम",          icon: Home },
       { key: "theme" as TabKey,        label: "Theme",        labelNp: "थिम",          icon: Palette },
       { key: "profile" as TabKey,      label: "MP Profile",   labelNp: "सांसद",        icon: User },
@@ -1379,6 +1590,7 @@ export default function Admin() {
           {safeTab === "complaints"   && <ComplaintsTab role={role} />}
           {safeTab === "team"         && !isLeader && <TeamTab />}
           {safeTab === "applications" && !isLeader && <ApplicationsTab />}
+          {safeTab === "events"       && isSuperAdmin && <EventsTab />}
           {safeTab === "home"         && isSuperAdmin && <HomeContentTab />}
 
           {safeTab === "theme" && isSuperAdmin && (
