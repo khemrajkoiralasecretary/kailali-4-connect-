@@ -19,8 +19,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SUPER_PIN = "1234";
-const STAFF_PIN  = "5678";
+const CREDS_KEY = "k4-admin-creds";
+
+function getCredentials(): { admin: string; staff: string } {
+  try {
+    const raw = localStorage.getItem(CREDS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { admin: "1234", staff: "1111" };
+}
+
+function saveCredentials(creds: { admin: string; staff: string }) {
+  localStorage.setItem(CREDS_KEY, JSON.stringify(creds));
+}
 
 type AdminRole = "super_admin" | "staff";
 type TabKey = "analytics" | "complaints" | "team" | "applications" | "home" | "theme" | "profile";
@@ -62,29 +73,32 @@ function applyTheme(t: ThemeKey) {
   localStorage.setItem("k4-theme", t);
 }
 
-// ── PIN GATE ─────────────────────────────────────────────────────────────────
-function PinGate({ onUnlock }: { onUnlock: (role: AdminRole) => void }) {
+// ── LOGIN GATE ───────────────────────────────────────────────────────────────
+function LoginGate({ onUnlock }: { onUnlock: (role: AdminRole) => void }) {
   const { language } = useI18n();
-  const [selected, setSelected] = useState<AdminRole | null>(null);
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleDigit = (d: string) => {
-    if (pin.length >= 4) return;
-    const next = pin + d;
-    setPin(next);
-    setError(false);
-    if (next.length === 4) {
-      const correct =
-        (selected === "super_admin" && next === SUPER_PIN) ||
-        (selected === "staff" && next === STAFF_PIN);
-      if (correct) {
-        sessionStorage.setItem("admin_role", selected!);
-        onUnlock(selected!);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const creds = getCredentials();
+    let role: AdminRole | null = null;
+    if (username === "admin" && password === creds.admin) role = "super_admin";
+    else if (username === "staff" && password === creds.staff) role = "staff";
+    setTimeout(() => {
+      setLoading(false);
+      if (role) {
+        sessionStorage.setItem("admin_role", role);
+        onUnlock(role);
       } else {
-        setTimeout(() => { setPin(""); setError(true); }, 300);
+        setError(language === "NP" ? "गलत username वा password" : "Incorrect username or password");
       }
-    }
+    }, 400);
   };
 
   return (
@@ -92,102 +106,94 @@ function PinGate({ onUnlock }: { onUnlock: (role: AdminRole) => void }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-card border border-border rounded-2xl p-8 w-80 space-y-6 shadow-xl text-center"
+        className="bg-card border border-border rounded-2xl p-8 w-full max-w-sm space-y-6 shadow-xl"
       >
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 text-center">
           <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
             <ShieldCheck size={28} className="text-primary" />
           </div>
           <h2 className="font-bold text-lg text-foreground">
-            {language === "NP" ? "एडमिन प्रणाली" : "Admin System"}
+            {language === "NP" ? "एडमिन लगइन" : "Admin Login"}
           </h2>
+          <p className="text-xs text-muted-foreground">
+            {language === "NP" ? "आफ्नो username र password प्रविष्ट गर्नुहोस्" : "Enter your username and password"}
+          </p>
         </div>
 
-        {!selected ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {language === "NP" ? "आफ्नो भूमिका छान्नुहोस्" : "Select your role"}
-            </p>
-            <button
-              onClick={() => setSelected("super_admin")}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-colors"
-            >
-              <Shield size={18} className="text-primary" />
-              <div className="text-left">
-                <p className="text-sm font-semibold text-foreground">
-                  {language === "NP" ? "सुपर एडमिन" : "Super Admin"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "NP" ? "पूर्ण नियन्त्रण" : "Full control"}
-                </p>
-              </div>
-            </button>
-            <button
-              onClick={() => setSelected("staff")}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-border hover:border-primary/30 hover:bg-muted transition-colors"
-            >
-              <UserCheck size={18} className="text-muted-foreground" />
-              <div className="text-left">
-                <p className="text-sm font-semibold text-foreground">
-                  {language === "NP" ? "स्टाफ" : "Staff"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {language === "NP" ? "सीमित पहुँच" : "Limited access"}
-                </p>
-              </div>
-            </button>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {language === "NP" ? "प्रयोगकर्ता नाम" : "Username"}
+            </label>
+            <div className="relative">
+              <UserCheck size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={username}
+                onChange={e => { setUsername(e.target.value); setError(""); }}
+                placeholder={language === "NP" ? "admin वा staff" : "admin or staff"}
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                autoComplete="username"
+                required
+              />
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {selected === "super_admin" ? <Shield size={15} className="text-primary" /> : <UserCheck size={15} className="text-muted-foreground" />}
-                <span className="text-sm font-medium text-foreground">
-                  {selected === "super_admin" ? (language === "NP" ? "सुपर एडमिन" : "Super Admin") : (language === "NP" ? "स्टाफ" : "Staff")}
-                </span>
-              </div>
-              <button onClick={() => { setSelected(null); setPin(""); setError(false); }} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                <X size={12} /> {language === "NP" ? "बदल्नुस्" : "Change"}
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {language === "NP" ? "पासवर्ड" : "Password"}
+            </label>
+            <div className="relative">
+              <Shield size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type={showPw ? "text" : "password"}
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(""); }}
+                placeholder="••••••••"
+                className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(p => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
+          </div>
 
-            <p className="text-xs text-muted-foreground">
-              {language === "NP" ? "PIN प्रविष्ट गर्नुहोस्" : "Enter PIN"}
+          {error && (
+            <p className="text-xs text-red-500 flex items-center gap-1.5">
+              <X size={12} /> {error}
             </p>
+          )}
 
-            <div className="flex justify-center gap-3">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className={cn("w-4 h-4 rounded-full border-2 transition-all",
-                  pin.length > i
-                    ? error ? "bg-red-500 border-red-500" : "bg-primary border-primary"
-                    : "border-border bg-background"
-                )} />
-              ))}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+          >
+            {loading ? (language === "NP" ? "जाँच गर्दै..." : "Checking...") : (language === "NP" ? "लगइन" : "Login")}
+          </button>
+        </form>
+
+        <div className="border-t border-border pt-4 space-y-1.5">
+          <p className="text-xs text-muted-foreground text-center font-medium">
+            {language === "NP" ? "डिफल्ट खाताहरू" : "Default Accounts"}
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+            <div className="bg-muted rounded-lg p-2 text-center">
+              <p className="font-semibold text-foreground">admin</p>
+              <p>{language === "NP" ? "सुपर एडमिन" : "Super Admin"}</p>
             </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {["1","2","3","4","5","6","7","8","9","","0","⌫"].map((d) => (
-                <button
-                  key={d}
-                  onClick={() => {
-                    if (d === "⌫") { setPin((p) => p.slice(0, -1)); setError(false); }
-                    else if (d !== "") handleDigit(d);
-                  }}
-                  disabled={d === ""}
-                  className={cn("h-12 rounded-xl text-lg font-semibold transition-all",
-                    d === "" ? "pointer-events-none" : "bg-muted hover:bg-muted/70 active:scale-95 text-foreground"
-                  )}
-                >{d}</button>
-              ))}
+            <div className="bg-muted rounded-lg p-2 text-center">
+              <p className="font-semibold text-foreground">staff</p>
+              <p>{language === "NP" ? "स्टाफ" : "Staff"}</p>
             </div>
-
-            {error && (
-              <p className="text-xs text-red-500 flex items-center justify-center gap-1">
-                <X size={11} /> {language === "NP" ? "गलत PIN" : "Wrong PIN — try again"}
-              </p>
-            )}
-          </>
-        )}
+          </div>
+        </div>
       </motion.div>
     </div>
   );
@@ -733,6 +739,143 @@ function HomeContentTab() {
   );
 }
 
+// ── CHANGE PASSWORD SECTION ──────────────────────────────────────────────────
+function ChangePasswordSection() {
+  const { language } = useI18n();
+
+  const [adminPw, setAdminPw]   = useState({ current: "", next: "", confirm: "" });
+  const [staffPw, setStaffPw]   = useState({ current: "", next: "", confirm: "" });
+  const [adminMsg, setAdminMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [staffMsg, setStaffMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const [showAdminPw, setShowAdminPw] = useState(false);
+  const [showStaffPw, setShowStaffPw] = useState(false);
+
+  const handleChange = (
+    who: "admin" | "staff",
+    form: { current: string; next: string; confirm: string },
+    setMsg: (m: { ok: boolean; text: string } | null) => void,
+    setForm: (f: { current: string; next: string; confirm: string }) => void
+  ) => {
+    const creds = getCredentials();
+    const currentStored = who === "admin" ? creds.admin : creds.staff;
+    const t = (en: string, np: string) => language === "NP" ? np : en;
+
+    if (!form.current || !form.next || !form.confirm) {
+      setMsg({ ok: false, text: t("All fields are required.", "सबै फिल्ड आवश्यक छ।") }); return;
+    }
+    if (form.current !== currentStored) {
+      setMsg({ ok: false, text: t("Current password is wrong.", "हालको पासवर्ड गलत छ।") }); return;
+    }
+    if (form.next.length < 4) {
+      setMsg({ ok: false, text: t("New password must be at least 4 characters.", "नयाँ पासवर्ड कम्तिमा ४ अक्षर हुनुपर्छ।") }); return;
+    }
+    if (form.next !== form.confirm) {
+      setMsg({ ok: false, text: t("Passwords do not match.", "पासवर्ड मेल खाएन।") }); return;
+    }
+    const updated = who === "admin" ? { ...creds, admin: form.next } : { ...creds, staff: form.next };
+    saveCredentials(updated);
+    setForm({ current: "", next: "", confirm: "" });
+    setMsg({ ok: true, text: t("Password changed successfully!", "पासवर्ड सफलतापूर्वक परिवर्तन भयो!") });
+    setTimeout(() => setMsg(null), 3000);
+  };
+
+  const PwFields = ({
+    form, setForm, show, setShow, onSubmit, label,
+  }: {
+    form: { current: string; next: string; confirm: string };
+    setForm: (f: { current: string; next: string; confirm: string }) => void;
+    show: boolean; setShow: (v: boolean) => void;
+    onSubmit: () => void;
+    label: string;
+  }) => (
+    <div className="space-y-2.5 p-4 bg-muted/50 rounded-xl border border-border">
+      <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <Lock size={14} className="text-primary" /> {label}
+      </p>
+      {[
+        { key: "current" as const, placeholder: language === "NP" ? "हालको पासवर्ड" : "Current password" },
+        { key: "next"    as const, placeholder: language === "NP" ? "नयाँ पासवर्ड"  : "New password" },
+        { key: "confirm" as const, placeholder: language === "NP" ? "पासवर्ड दोहोर्याउनुस्" : "Confirm new password" },
+      ].map(({ key, placeholder }) => (
+        <div key={key} className="relative">
+          <input
+            type={show ? "text" : "password"}
+            value={form[key]}
+            onChange={e => setForm({ ...form, [key]: e.target.value })}
+            placeholder={placeholder}
+            className="w-full pr-9 pl-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          {key === "current" && (
+            <button type="button" onClick={() => setShow(!show)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              {show ? <EyeOff size={13} /> : <Eye size={13} />}
+            </button>
+          )}
+        </div>
+      ))}
+      <button
+        onClick={onSubmit}
+        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90"
+      >
+        <Lock size={13} />
+        {language === "NP" ? "पासवर्ड परिवर्तन गर्नुस्" : "Change Password"}
+      </button>
+    </div>
+  );
+
+  return (
+    <Section icon={Lock} title={language === "NP" ? "पासवर्ड परिवर्तन" : "Change Passwords"}>
+      <div className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          {language === "NP"
+            ? "admin र staff दुवैको पासवर्ड यहाँबाट परिवर्तन गर्न सकिन्छ।"
+            : "Super Admin can update both admin and staff login passwords here."}
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <PwFields
+              form={adminPw} setForm={setAdminPw}
+              show={showAdminPw} setShow={setShowAdminPw}
+              label={language === "NP" ? "Admin पासवर्ड" : "Admin Password"}
+              onSubmit={() => handleChange("admin", adminPw, setAdminMsg, setAdminPw)}
+            />
+            {adminMsg && (
+              <p className={cn("text-xs flex items-center gap-1.5", adminMsg.ok ? "text-green-600" : "text-red-500")}>
+                {adminMsg.ok ? <Check size={11} /> : <X size={11} />} {adminMsg.text}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <PwFields
+              form={staffPw} setForm={setStaffPw}
+              show={showStaffPw} setShow={setShowStaffPw}
+              label={language === "NP" ? "Staff पासवर्ड" : "Staff Password"}
+              onSubmit={() => handleChange("staff", staffPw, setStaffMsg, setStaffPw)}
+            />
+            {staffMsg && (
+              <p className={cn("text-xs flex items-center gap-1.5", staffMsg.ok ? "text-green-600" : "text-red-500")}>
+                {staffMsg.ok ? <Check size={11} /> : <X size={11} />} {staffMsg.text}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
+            <AlertTriangle size={13} />
+            {language === "NP"
+              ? "नयाँ पासवर्ड याद राख्नुहोस् — यो यन्त्रमा सेभ हुन्छ।"
+              : "Remember your new password — it is saved on this device."}
+          </p>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
 // ── TEAM APPLICATIONS TAB ─────────────────────────────────────────────────────
 function ApplicationsTab() {
   const { language } = useI18n();
@@ -882,7 +1025,7 @@ export default function Admin() {
 
   const handleUnlock = (r: AdminRole) => { setRole(r); setUnlocked(true); };
 
-  if (!unlocked || !role) return <PinGate onUnlock={handleUnlock} />;
+  if (!unlocked || !role) return <LoginGate onUnlock={handleUnlock} />;
 
   const isSuperAdmin = role === "super_admin";
 
@@ -991,45 +1134,49 @@ export default function Admin() {
           )}
 
           {safeTab === "profile" && isSuperAdmin && (
-            <Section icon={User} title={language === "NP" ? "सांसद प्रोफाइल" : "MP Profile"}>
-              <div className="space-y-3">
-                {[
-                  { field: "name", label: language === "NP" ? "नाम" : "Name", multi: false, placeholder: "" },
-                  { field: "message", label: language === "NP" ? "सन्देश" : "Message", multi: true, placeholder: "" },
-                  { field: "photoUrl", label: language === "NP" ? "फोटो URL" : "Photo URL", multi: false, placeholder: "https://..." },
-                ].map(({ field, label, multi, placeholder }) => (
-                  <div key={field}>
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
-                    {multi ? (
-                      <textarea
-                        value={mpForm[field as keyof typeof mpForm]}
-                        onChange={e => setMpForm({ ...mpForm, [field]: e.target.value })}
-                        rows={2}
-                        className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      />
-                    ) : (
-                      <input
-                        value={mpForm[field as keyof typeof mpForm]}
-                        onChange={e => setMpForm({ ...mpForm, [field]: e.target.value })}
-                        placeholder={placeholder}
-                        className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={async () => {
-                    await updateMp.mutateAsync({ data: { name: mpForm.name, message: mpForm.message, photoUrl: mpForm.photoUrl || undefined } });
-                    setMpSaved(true); setTimeout(() => setMpSaved(false), 2000);
-                  }}
-                  disabled={updateMp.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
-                >
-                  {mpSaved ? <Check size={14} /> : <Save size={14} />}
-                  {mpSaved ? (language === "NP" ? "सेभ भयो!" : "Saved!") : (language === "NP" ? "सेभ गर्नुहोस्" : "Save Profile")}
-                </button>
-              </div>
-            </Section>
+            <div className="space-y-6">
+              <Section icon={User} title={language === "NP" ? "सांसद प्रोफाइल" : "MP Profile"}>
+                <div className="space-y-3">
+                  {[
+                    { field: "name", label: language === "NP" ? "नाम" : "Name", multi: false, placeholder: "" },
+                    { field: "message", label: language === "NP" ? "सन्देश" : "Message", multi: true, placeholder: "" },
+                    { field: "photoUrl", label: language === "NP" ? "फोटो URL" : "Photo URL", multi: false, placeholder: "https://..." },
+                  ].map(({ field, label, multi, placeholder }) => (
+                    <div key={field}>
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
+                      {multi ? (
+                        <textarea
+                          value={mpForm[field as keyof typeof mpForm]}
+                          onChange={e => setMpForm({ ...mpForm, [field]: e.target.value })}
+                          rows={2}
+                          className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                        />
+                      ) : (
+                        <input
+                          value={mpForm[field as keyof typeof mpForm]}
+                          onChange={e => setMpForm({ ...mpForm, [field]: e.target.value })}
+                          placeholder={placeholder}
+                          className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={async () => {
+                      await updateMp.mutateAsync({ data: { name: mpForm.name, message: mpForm.message, photoUrl: mpForm.photoUrl || undefined } });
+                      setMpSaved(true); setTimeout(() => setMpSaved(false), 2000);
+                    }}
+                    disabled={updateMp.isPending}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+                  >
+                    {mpSaved ? <Check size={14} /> : <Save size={14} />}
+                    {mpSaved ? (language === "NP" ? "सेभ भयो!" : "Saved!") : (language === "NP" ? "सेभ गर्नुहोस्" : "Save Profile")}
+                  </button>
+                </div>
+              </Section>
+
+              <ChangePasswordSection />
+            </div>
           )}
         </motion.div>
       </AnimatePresence>
