@@ -1,0 +1,132 @@
+Build a complete civic-tech web application called “Kailali-4 Digital MP Office System” using HTML, CSS, and JavaScript (no frameworks). The system must be fully functional, mobile responsive, and allow full admin control and full data visibility.
+
+----------------------------------
+🎯 CORE GOAL
+----------------------------------
+Create a system where:
+- Citizens can submit complaints, join team, and view updates
+- Admin can control, edit, and view EVERYTHING in one dashboard
+
+----------------------------------
+🔐 ADMIN SUPER CONTROL PANEL
+----------------------------------
+
+Create an advanced admin panel (admin.html) with FULL CONTROL:
+
+1. 👤 MP PROFILE CONTROL
+   - Update MP Name, Message, Photo
+   - Convert image to Base64 and store in localStorage
+   - Display on all pages dynamically
+
+2. 🌐 SOCIAL MEDIA CONTROL
+   - Facebook, YouTube, Website links
+   - Save in localStorage
+   - Display dynamically on About page
+
+3. 🏠 DASHBOARD SECTION CONTROL
+   - Toggle ON/OFF:
+     - Home Section
+     - Team Section
+     - Complaint Section
+     - Analytics Section
+
+4. 🎨 THEME SYSTEM
+   - 5 themes: Blue, Red, Green, Black, Purple
+   - Save in localStorage
+   - Apply automatically on all pages
+
+5. 👥 TEAM MANAGEMENT
+   - View all team members (full list)
+   - Show: ID, Name, Phone, Palika, Ward, Rank, Photo
+   - Change rank (Volunteer / Coordinator / Leader)
+   - Delete individual member
+   - Delete all members
+
+6. 📝 COMPLAINT MANAGEMENT
+   - View all complaints
+   - Show full details
+   - Mark status:
+     - Pending
+     - In Progress
+     - Solved
+   - Delete complaint
+   - Delete all complaints
+
+7. 📊 ANALYTICS DASHBOARD
+   - Total team members count
+   - Total complaints count
+   - Palika-wise breakdown
+   - Ward-wise breakdown
+   - Rank distribution
+
+8. 🔍 FULL DATA VIEW SYSTEM
+   - Admin can see ALL data in UI (not just console)
+   - Display lists in card/table format
+   - Real-time update when data changes
+
+----------------------------------
+🏠 PUBLIC WEBSITE (USER SIDE)
+----------------------------------
+
+1. HOME PAGE (index.html)
+   - MP Profile (dynamic)
+   - Quick stats (team count, complaint count)
+   - Navigation buttons
+
+2. ABOUT PAGE (about.html)
+   - MP info
+   - System description
+   - Social links (dynamic)
+
+3. 👥 TEAM PAGE
+   - Show all members
+   - Card UI with photo + rank + location
+
+4. 📝 COMPLAINT PAGE
+   Form fields:
+   - Name
+   - Phone
+   - Palika (Godawari, Gauriganga, Chure, Mohanyal)
+   - Ward (dynamic: 12, 11, 6, 1)
+   - Category
+   - Description
+   - Photo
+   - Auto ID
+
+   After submit:
+   - Save in localStorage
+   - Show confirmation
+
+----------------------------------
+📁 FILE STRUCTURE
+----------------------------------
+
+- index.html
+- about.html
+- admin.html
+- team.html
+- complaints.html
+- style.css
+- script.js
+- admin.js
+
+----------------------------------
+⚙️ TECH REQUIREMENTS
+----------------------------------
+
+- Use localStorage for all data storage
+- Use FileReader for image upload (Base64)
+- Use clean UI (cards, mobile responsive)
+- Use modular JavaScript functions
+- Use reusable components
+
+----------------------------------
+🎯 FINAL RESULT
+----------------------------------
+
+- Fully working multi-page web app
+- Admin can view and control everything
+- All data visible in UI
+- No data hidden in console
+- Clean, modern, responsive design
+- Works fully in Replit free environment
