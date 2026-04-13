@@ -10,11 +10,11 @@ import {
   useListTeamApplications, useUpdateTeamApplicationStatus, useDeleteTeamApplication,
   useListEvents, useCreateEvent, useUpdateEvent, useDeleteEvent,
 } from "@workspace/api-client-react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, LogOut, User, Palette, Users, FileText, BarChart2,
-  Save, Trash2, Eye, EyeOff, Check, Lock, Home, Edit2, X,
+  Save, Trash2, Eye, EyeOff, Check, Lock, Home, Edit2, X, Wallet,
   Plus, Shield, UserCheck, Search, AlertTriangle, Upload,
   Facebook, Youtube, Globe, Link2,
   Bell, ShieldAlert, Clock, ArrowRight, CalendarDays,
@@ -37,7 +37,7 @@ function saveCredentials(creds: { admin: string; coord: string; leader: string }
 }
 
 type AdminRole = "super_admin" | "coordinator" | "leader";
-type TabKey = "analytics" | "alerts" | "complaints" | "team" | "applications" | "events" | "home" | "theme" | "profile";
+type TabKey = "analytics" | "alerts" | "complaints" | "team" | "applications" | "events" | "fund" | "home" | "theme" | "profile";
 
 const THEMES = [
   { key: "red",    label: "Red",    labelNp: "रातो",  color: "bg-red-600" },
@@ -1043,6 +1043,168 @@ function ApplicationsTab() {
   );
 }
 
+// ── FUND TAB ──────────────────────────────────────────────────────────────────
+type Donation = { id: number; name: string; amount: number; created_at: string };
+type Expense  = { id: number; title: string; amount: number; created_at: string };
+
+function FundTab() {
+  const { language } = useI18n();
+  const NP = language === "NP";
+  const qc = useQueryClient();
+  const token = () => sessionStorage.getItem("k4-admin-token") ?? "";
+
+  const adminFetch = async (url: string, opts: RequestInit = {}) => {
+    const res = await fetch(url, { ...opts, headers: { "X-Admin-Token": token(), "Content-Type": "application/json", ...(opts.headers ?? {}) } });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  };
+
+  const { data: donations = [], isLoading: dLoad } = useQuery<Donation[]>({
+    queryKey: ["fundDonations"], queryFn: () => fetch("/api/fund/donations").then(r => r.json()),
+  });
+  const { data: expenses  = [], isLoading: eLoad } = useQuery<Expense[]>({
+    queryKey: ["fundExpenses"],  queryFn: () => fetch("/api/fund/expenses").then(r => r.json()),
+  });
+  const { data: qrData } = useQuery<{ qrUrl: string | null }>({
+    queryKey: ["fundQr"], queryFn: () => fetch("/api/fund/qr").then(r => r.json()),
+  });
+
+  const totalDonations = donations.reduce((a, d) => a + Number(d.amount), 0);
+  const totalExpenses  = expenses.reduce((a, e) => a + Number(e.amount), 0);
+  const fmt = (n: number) => `Rs ${Number(n).toLocaleString()}`;
+
+  const [dName, setDName]     = useState("");
+  const [dAmount, setDAmount] = useState("");
+  const [eTitle, setETitle]   = useState("");
+  const [eAmount, setEAmount] = useState("");
+  const [qrInput, setQrInput] = useState("");
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
+
+  const addDonation = useMutation({
+    mutationFn: () => adminFetch("/api/fund/donations", { method: "POST", body: JSON.stringify({ name: dName.trim(), amount: Number(dAmount) }) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["fundDonations"] }); setDName(""); setDAmount(""); },
+  });
+  const delDonation = useMutation({
+    mutationFn: (id: number) => adminFetch(`/api/fund/donations/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundDonations"] }),
+  });
+  const addExpense = useMutation({
+    mutationFn: () => adminFetch("/api/fund/expenses", { method: "POST", body: JSON.stringify({ title: eTitle.trim(), amount: Number(eAmount) }) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["fundExpenses"] }); setETitle(""); setEAmount(""); },
+  });
+  const delExpense = useMutation({
+    mutationFn: (id: number) => adminFetch(`/api/fund/expenses/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundExpenses"] }),
+  });
+  const saveQr = useMutation({
+    mutationFn: (qrUrl: string) => adminFetch("/api/fund/qr", { method: "POST", body: JSON.stringify({ qrUrl }) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["fundQr"] }),
+  });
+
+  const handleQrFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const url = ev.target?.result as string;
+      setQrPreview(url);
+      saveQr.mutate(url);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const inputCls = "px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-1 focus:ring-primary w-full";
+  const btnCls   = "px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium";
+
+  return (
+    <Section icon={Wallet} title={NP ? "कोष व्यवस्थापन" : "Fund Management"}>
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3 mb-2">
+        {[
+          { label: NP ? "कुल दान" : "Donations", value: fmt(totalDonations), cls: "text-green-700" },
+          { label: NP ? "कुल खर्च" : "Expenses",  value: fmt(totalExpenses),  cls: "text-red-700" },
+          { label: NP ? "ब्यालेन्स" : "Balance",  value: fmt(totalDonations - totalExpenses), cls: totalDonations >= totalExpenses ? "text-blue-700" : "text-orange-700" },
+        ].map(c => (
+          <div key={c.label} className="border border-border rounded-xl p-3 text-center bg-muted/30">
+            <p className={`text-base font-bold ${c.cls}`}>{c.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{c.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Donations */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">{NP ? "दान थप्नुस्" : "Add Donation"}</h3>
+          <div className="flex gap-2">
+            <input value={dName} onChange={e => setDName(e.target.value)} placeholder={NP ? "नाम" : "Name"} className={inputCls} />
+            <input value={dAmount} onChange={e => setDAmount(e.target.value)} placeholder={NP ? "रकम" : "Amount"} type="number" min="1" className={inputCls} style={{ maxWidth: 100 }} />
+            <button onClick={() => addDonation.mutate()} disabled={!dName.trim() || !dAmount || addDonation.isPending} className={btnCls}>
+              {NP ? "थप" : "Add"}
+            </button>
+          </div>
+          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+            {dLoad ? <div className="h-8 animate-pulse bg-muted rounded-lg" /> : donations.map((d, i) => (
+              <div key={d.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg border border-border hover:bg-muted/40">
+                <span className="text-sm">#{i + 1} {d.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-green-700">{fmt(d.amount)}</span>
+                  <button onClick={() => delDonation.mutate(d.id)} className="p-1 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={12} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Expenses */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">{NP ? "खर्च थप्नुस्" : "Add Expense"}</h3>
+          <div className="flex gap-2">
+            <input value={eTitle} onChange={e => setETitle(e.target.value)} placeholder={NP ? "विवरण" : "Title"} className={inputCls} />
+            <input value={eAmount} onChange={e => setEAmount(e.target.value)} placeholder={NP ? "रकम" : "Amount"} type="number" min="1" className={inputCls} style={{ maxWidth: 100 }} />
+            <button onClick={() => addExpense.mutate()} disabled={!eTitle.trim() || !eAmount || addExpense.isPending} className={btnCls}>
+              {NP ? "थप" : "Add"}
+            </button>
+          </div>
+          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+            {eLoad ? <div className="h-8 animate-pulse bg-muted rounded-lg" /> : expenses.map((e, i) => (
+              <div key={e.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg border border-border hover:bg-muted/40">
+                <span className="text-sm">#{i + 1} {e.title}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-red-700">{fmt(e.amount)}</span>
+                  <button onClick={() => delExpense.mutate(e.id)} className="p-1 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={12} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* QR Upload */}
+      <div className="border-t border-border pt-4 space-y-3">
+        <h3 className="text-sm font-semibold text-foreground">{NP ? "QR कोड अपलोड गर्नुस्" : "Upload QR Code"}</h3>
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="flex items-center gap-2 px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-muted cursor-pointer">
+            <Upload size={14} />
+            {NP ? "फाइल छान्नुस्" : "Choose file"}
+            <input type="file" accept="image/*" className="hidden" onChange={handleQrFile} />
+          </label>
+          <span className="text-xs text-muted-foreground">{NP ? "वा URL राख्नुस्:" : "or paste URL:"}</span>
+          <div className="flex gap-2 flex-1 min-w-[200px]">
+            <input value={qrInput} onChange={e => setQrInput(e.target.value)} placeholder="https://..." className={inputCls} />
+            <button onClick={() => { saveQr.mutate(qrInput); setQrInput(""); }} disabled={!qrInput.trim() || saveQr.isPending} className={btnCls}>
+              {NP ? "सेभ" : "Save"}
+            </button>
+          </div>
+        </div>
+        {(qrPreview ?? qrData?.qrUrl) && (
+          <img src={qrPreview ?? qrData?.qrUrl ?? ""} alt="QR Preview" style={{ width: 140, height: 140, objectFit: "contain", borderRadius: 8, border: "1px solid hsl(var(--border))" }} />
+        )}
+      </div>
+    </Section>
+  );
+}
+
 // ── ALERTS TAB ────────────────────────────────────────────────────────────────
 const PALIKA_LABELS: Record<string, string> = {
   godawari: "Godawari", gauriganga: "Gauriganga", chure: "Chure", mohanyal: "Mohanyal",
@@ -1530,6 +1692,7 @@ export default function Admin() {
     ] : []),
     ...(isSuperAdmin ? [
       { key: "events" as TabKey,       label: "Events",       labelNp: "कार्यक्रम",    icon: CalendarDays },
+      { key: "fund" as TabKey,         label: "Fund",         labelNp: "कोष",          icon: Wallet },
       { key: "home" as TabKey,         label: "Home",         labelNp: "होम",          icon: Home },
       { key: "theme" as TabKey,        label: "Theme",        labelNp: "थिम",          icon: Palette },
       { key: "profile" as TabKey,      label: "MP Profile",   labelNp: "सांसद",        icon: User },
@@ -1626,6 +1789,7 @@ export default function Admin() {
           {safeTab === "team"         && !isLeader && <TeamTab />}
           {safeTab === "applications" && !isLeader && <ApplicationsTab />}
           {safeTab === "events"       && isSuperAdmin && <EventsTab />}
+          {safeTab === "fund"         && isSuperAdmin && <FundTab />}
           {safeTab === "home"         && isSuperAdmin && <HomeContentTab />}
 
           {safeTab === "theme" && isSuperAdmin && (

@@ -10,6 +10,7 @@ import settingsRouter from "./settings";
 import citizensRouter from "./citizens";
 import teamApplicationsRouter from "./team-applications";
 import adminAuthRouter from "./admin-auth";
+import fundRouter from "./fund";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use("/team", teamRouter);
 router.use("/settings", settingsRouter);
 router.use("/citizens", citizensRouter);
 router.use("/team-applications", teamApplicationsRouter);
+router.use("/fund", fundRouter);
 
 export default router;

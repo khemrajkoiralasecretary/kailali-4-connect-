@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { useCitizenAuth } from "@/lib/citizenAuth";
 import {
   LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users,
-  ShieldCheck, Menu, X, Facebook, Youtube, Globe, Info, UserCircle, LogOut, CalendarDays,
+  ShieldCheck, Menu, X, Facebook, Youtube, Globe, Info, UserCircle, LogOut, CalendarDays, Wallet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ export default function Layout({ children }: LayoutProps) {
     { href: "/ideas", label: t("nav.ideas"), icon: Lightbulb },
     { href: "/news", label: t("nav.news"), icon: Newspaper },
     { href: "/events", label: language === "NP" ? "कार्यक्रम" : "Events", icon: CalendarDays },
+    { href: "/fund",   label: language === "NP" ? "कोष" : "Fund",         icon: Wallet },
     { href: "/directory", label: t("nav.directory"), icon: Map },
     { href: "/team", label: t("nav.team"), icon: Users },
     { href: "/about", label: t("nav.about") ?? "About", icon: Info },
