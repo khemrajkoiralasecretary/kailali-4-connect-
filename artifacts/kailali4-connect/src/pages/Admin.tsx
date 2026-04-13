@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, LogOut, User, Palette, Users, FileText, BarChart2,
   Save, Trash2, Eye, EyeOff, Check, Lock, Home, Edit2, X,
-  Plus, Shield, UserCheck, Search, AlertTriangle,
+  Plus, Shield, UserCheck, Search, AlertTriangle, Upload,
   Facebook, Youtube, Globe, Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -1158,31 +1158,78 @@ export default function Admin() {
           {safeTab === "profile" && isSuperAdmin && (
             <div className="space-y-6">
               <Section icon={User} title={language === "NP" ? "सांसद प्रोफाइल" : "MP Profile"}>
-                <div className="space-y-3">
-                  {[
-                    { field: "name", label: language === "NP" ? "नाम" : "Name", multi: false, placeholder: "" },
-                    { field: "message", label: language === "NP" ? "सन्देश" : "Message", multi: true, placeholder: "" },
-                    { field: "photoUrl", label: language === "NP" ? "फोटो URL" : "Photo URL", multi: false, placeholder: "https://..." },
-                  ].map(({ field, label, multi, placeholder }) => (
-                    <div key={field}>
-                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
-                      {multi ? (
-                        <textarea
-                          value={mpForm[field as keyof typeof mpForm]}
-                          onChange={e => setMpForm({ ...mpForm, [field]: e.target.value })}
-                          rows={2}
-                          className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                        />
-                      ) : (
-                        <input
-                          value={mpForm[field as keyof typeof mpForm]}
-                          onChange={e => setMpForm({ ...mpForm, [field]: e.target.value })}
-                          placeholder={placeholder}
-                          className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      )}
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {language === "NP" ? "नाम" : "Name"}
+                    </label>
+                    <input
+                      value={mpForm.name}
+                      onChange={e => setMpForm({ ...mpForm, name: e.target.value })}
+                      className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {language === "NP" ? "सन्देश" : "Message"}
+                    </label>
+                    <textarea
+                      value={mpForm.message}
+                      onChange={e => setMpForm({ ...mpForm, message: e.target.value })}
+                      rows={3}
+                      className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    />
+                  </div>
+
+                  {/* Photo upload */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {language === "NP" ? "फोटो" : "Photo"}
+                    </label>
+                    <div className="mt-2 flex items-center gap-4">
+                      {/* Preview */}
+                      <div className="w-20 h-20 rounded-full border-2 border-border bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {mpForm.photoUrl
+                          ? <img src={mpForm.photoUrl} alt="MP" className="w-full h-full object-cover" />
+                          : <User size={32} className="text-muted-foreground" />
+                        }
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors">
+                          <Upload size={14} />
+                          {language === "NP" ? "फोटो छान्नुहोस्" : "Choose Photo"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = ev => {
+                                setMpForm(f => ({ ...f, photoUrl: ev.target?.result as string }));
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                        {mpForm.photoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setMpForm(f => ({ ...f, photoUrl: "" }))}
+                            className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                          >
+                            <X size={12} />
+                            {language === "NP" ? "हटाउनुहोस्" : "Remove"}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
                   <button
                     onClick={async () => {
                       await updateMp.mutateAsync({ data: { name: mpForm.name, message: mpForm.message, photoUrl: mpForm.photoUrl || undefined } });
