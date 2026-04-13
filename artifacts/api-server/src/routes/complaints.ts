@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { db, complaintsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { z } from "zod/v4";
 import {
   ListComplaintsQueryParams,
   CreateComplaintBody,
@@ -77,6 +76,19 @@ router.get("/:id", async (req, res) => {
     createdAt: complaint.createdAt.toISOString(),
     updatedAt: complaint.updatedAt.toISOString(),
   });
+});
+
+router.delete("/:id", async (req, res) => {
+  const parsed = GetComplaintParams.safeParse({ id: Number(req.params.id) });
+  if (!parsed.success) return res.status(400).json({ error: "Invalid complaint ID" });
+
+  const [deleted] = await db
+    .delete(complaintsTable)
+    .where(eq(complaintsTable.id, parsed.data.id))
+    .returning();
+
+  if (!deleted) return res.status(404).json({ error: "Complaint not found" });
+  return res.json({ deleted: 1 });
 });
 
 router.patch("/:id", async (req, res) => {

@@ -95,6 +95,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Complaint"
+    delete:
+      operationId: deleteComplaint
+      tags: [complaints]
+      summary: Delete a complaint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAllResult"
+        "404":
+          description: Not found
     patch:
       operationId: updateComplaintStatus
       tags: [complaints]
@@ -230,6 +249,36 @@ paths:
                 items:
                   $ref: "#/components/schemas/WardStat"
 
+  /settings/home-content:
+    get:
+      operationId: getHomeContent
+      tags: [settings]
+      summary: Get home page content settings
+      responses:
+        "200":
+          description: Home content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeContent"
+    patch:
+      operationId: updateHomeContent
+      tags: [settings]
+      summary: Update home page content settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HomeContent"
+      responses:
+        "200":
+          description: Updated home content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeContent"
+
   /settings/mp-profile:
     get:
       operationId: getMpProfile
@@ -327,6 +376,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeleteAllResult"
+
+  /team/{id}:
+    patch:
+      operationId: editTeamMember
+      tags: [team]
+      summary: Edit a team member's details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditTeamMemberBody"
+      responses:
+        "200":
+          description: Updated member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamMember"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteTeamMember
+      tags: [team]
+      summary: Delete a team member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAllResult"
+        "404":
+          description: Not found
 
   /team/{id}/rank:
     patch:
@@ -563,6 +658,32 @@ components:
         - ward
         - total
         - resolved
+
+    HomeContent:
+      type: object
+      properties:
+        welcome:
+          type: string
+        footer:
+          type: string
+      required:
+        - welcome
+        - footer
+
+    EditTeamMemberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        palika:
+          type: string
+        ward:
+          type: integer
+        rank:
+          type: string
+          enum: [volunteer, coordinator, leader]
 
     MpProfile:
       type: object

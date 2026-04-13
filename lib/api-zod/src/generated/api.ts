@@ -69,6 +69,17 @@ export const GetComplaintResponse = zod.object({
 });
 
 /**
+ * @summary Delete a complaint
+ */
+export const DeleteComplaintParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteComplaintResponse = zod.object({
+  deleted: zod.number(),
+});
+
+/**
  * @summary Update complaint status
  */
 export const UpdateComplaintStatusParams = zod.object({
@@ -177,6 +188,27 @@ export const GetWardBreakdownResponseItem = zod.object({
 export const GetWardBreakdownResponse = zod.array(GetWardBreakdownResponseItem);
 
 /**
+ * @summary Get home page content settings
+ */
+export const GetHomeContentResponse = zod.object({
+  welcome: zod.string(),
+  footer: zod.string(),
+});
+
+/**
+ * @summary Update home page content settings
+ */
+export const UpdateHomeContentBody = zod.object({
+  welcome: zod.string(),
+  footer: zod.string(),
+});
+
+export const UpdateHomeContentResponse = zod.object({
+  welcome: zod.string(),
+  footer: zod.string(),
+});
+
+/**
  * @summary Get MP profile settings
  */
 export const GetMpProfileResponse = zod.object({
@@ -243,6 +275,44 @@ export const DeleteAllTeamMembersResponse = zod.object({
  * @summary Delete all complaints
  */
 export const DeleteAllComplaintsResponse = zod.object({
+  deleted: zod.number(),
+});
+
+/**
+ * @summary Edit a team member's details
+ */
+export const EditTeamMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const EditTeamMemberBody = zod.object({
+  name: zod.string().optional(),
+  phone: zod.string().optional(),
+  palika: zod.string().optional(),
+  ward: zod.number().optional(),
+  rank: zod.enum(["volunteer", "coordinator", "leader"]).optional(),
+});
+
+export const EditTeamMemberResponse = zod.object({
+  id: zod.number(),
+  cid: zod.string(),
+  name: zod.string(),
+  phone: zod.string().optional(),
+  palika: zod.string(),
+  ward: zod.number(),
+  photoUrl: zod.string().optional(),
+  rank: zod.enum(["volunteer", "coordinator", "leader"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a team member
+ */
+export const DeleteTeamMemberParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteTeamMemberResponse = zod.object({
   deleted: zod.number(),
 });
 

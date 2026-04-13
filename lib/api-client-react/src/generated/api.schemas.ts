@@ -99,6 +99,28 @@ export interface WardStat {
   resolved: number;
 }
 
+export interface HomeContent {
+  welcome: string;
+  footer: string;
+}
+
+export type EditTeamMemberBodyRank =
+  (typeof EditTeamMemberBodyRank)[keyof typeof EditTeamMemberBodyRank];
+
+export const EditTeamMemberBodyRank = {
+  volunteer: "volunteer",
+  coordinator: "coordinator",
+  leader: "leader",
+} as const;
+
+export interface EditTeamMemberBody {
+  name?: string;
+  phone?: string;
+  palika?: string;
+  ward?: number;
+  rank?: EditTeamMemberBodyRank;
+}
+
 export interface MpProfile {
   name: string;
   message: string;

@@ -24,7 +24,9 @@ import type {
   CreateNewsBody,
   DashboardStats,
   DeleteAllResult,
+  EditTeamMemberBody,
   HealthStatus,
+  HomeContent,
   Idea,
   JoinTeamBody,
   ListComplaintsParams,
@@ -387,6 +389,90 @@ export function useGetComplaint<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Delete a complaint
+ */
+export const getDeleteComplaintUrl = (id: number) => {
+  return `/api/complaints/${id}`;
+};
+
+export const deleteComplaint = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteAllResult> => {
+  return customFetch<DeleteAllResult>(getDeleteComplaintUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteComplaintMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteComplaint>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteComplaint>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteComplaint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteComplaint>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteComplaint(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteComplaintMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteComplaint>>
+>;
+
+export type DeleteComplaintMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete a complaint
+ */
+export const useDeleteComplaint = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteComplaint>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteComplaint>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteComplaintMutationOptions(options));
+};
 
 /**
  * @summary Update complaint status
@@ -1013,6 +1099,167 @@ export function useGetWardBreakdown<
 }
 
 /**
+ * @summary Get home page content settings
+ */
+export const getGetHomeContentUrl = () => {
+  return `/api/settings/home-content`;
+};
+
+export const getHomeContent = async (
+  options?: RequestInit,
+): Promise<HomeContent> => {
+  return customFetch<HomeContent>(getGetHomeContentUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetHomeContentQueryKey = () => {
+  return [`/api/settings/home-content`] as const;
+};
+
+export const getGetHomeContentQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHomeContent>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getHomeContent>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHomeContentQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHomeContent>>> = ({
+    signal,
+  }) => getHomeContent({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getHomeContent>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetHomeContentQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getHomeContent>>
+>;
+export type GetHomeContentQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get home page content settings
+ */
+
+export function useGetHomeContent<
+  TData = Awaited<ReturnType<typeof getHomeContent>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getHomeContent>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetHomeContentQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update home page content settings
+ */
+export const getUpdateHomeContentUrl = () => {
+  return `/api/settings/home-content`;
+};
+
+export const updateHomeContent = async (
+  homeContent: HomeContent,
+  options?: RequestInit,
+): Promise<HomeContent> => {
+  return customFetch<HomeContent>(getUpdateHomeContentUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(homeContent),
+  });
+};
+
+export const getUpdateHomeContentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateHomeContent>>,
+    TError,
+    { data: BodyType<HomeContent> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateHomeContent>>,
+  TError,
+  { data: BodyType<HomeContent> },
+  TContext
+> => {
+  const mutationKey = ["updateHomeContent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateHomeContent>>,
+    { data: BodyType<HomeContent> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateHomeContent(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateHomeContentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateHomeContent>>
+>;
+export type UpdateHomeContentMutationBody = BodyType<HomeContent>;
+export type UpdateHomeContentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update home page content settings
+ */
+export const useUpdateHomeContent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateHomeContent>>,
+    TError,
+    { data: BodyType<HomeContent> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateHomeContent>>,
+  TError,
+  { data: BodyType<HomeContent> },
+  TContext
+> => {
+  return useMutation(getUpdateHomeContentMutationOptions(options));
+};
+
+/**
  * @summary Get MP profile settings
  */
 export const getGetMpProfileUrl = () => {
@@ -1513,6 +1760,177 @@ export const useDeleteAllComplaints = <
   TContext
 > => {
   return useMutation(getDeleteAllComplaintsMutationOptions(options));
+};
+
+/**
+ * @summary Edit a team member's details
+ */
+export const getEditTeamMemberUrl = (id: number) => {
+  return `/api/team/${id}`;
+};
+
+export const editTeamMember = async (
+  id: number,
+  editTeamMemberBody: EditTeamMemberBody,
+  options?: RequestInit,
+): Promise<TeamMember> => {
+  return customFetch<TeamMember>(getEditTeamMemberUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(editTeamMemberBody),
+  });
+};
+
+export const getEditTeamMemberMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof editTeamMember>>,
+    TError,
+    { id: number; data: BodyType<EditTeamMemberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof editTeamMember>>,
+  TError,
+  { id: number; data: BodyType<EditTeamMemberBody> },
+  TContext
+> => {
+  const mutationKey = ["editTeamMember"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof editTeamMember>>,
+    { id: number; data: BodyType<EditTeamMemberBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return editTeamMember(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EditTeamMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof editTeamMember>>
+>;
+export type EditTeamMemberMutationBody = BodyType<EditTeamMemberBody>;
+export type EditTeamMemberMutationError = ErrorType<void>;
+
+/**
+ * @summary Edit a team member's details
+ */
+export const useEditTeamMember = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof editTeamMember>>,
+    TError,
+    { id: number; data: BodyType<EditTeamMemberBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof editTeamMember>>,
+  TError,
+  { id: number; data: BodyType<EditTeamMemberBody> },
+  TContext
+> => {
+  return useMutation(getEditTeamMemberMutationOptions(options));
+};
+
+/**
+ * @summary Delete a team member
+ */
+export const getDeleteTeamMemberUrl = (id: number) => {
+  return `/api/team/${id}`;
+};
+
+export const deleteTeamMember = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteAllResult> => {
+  return customFetch<DeleteAllResult>(getDeleteTeamMemberUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteTeamMemberMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTeamMember>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteTeamMember>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteTeamMember"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteTeamMember>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteTeamMember(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteTeamMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteTeamMember>>
+>;
+
+export type DeleteTeamMemberMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete a team member
+ */
+export const useDeleteTeamMember = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTeamMember>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteTeamMember>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteTeamMemberMutationOptions(options));
 };
 
 /**

@@ -59,6 +59,43 @@ router.delete("/all", async (_req, res) => {
   return res.json({ deleted: deleted.length });
 });
 
+router.patch("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid ID" });
+
+  const { name, phone, palika, ward, rank } = req.body as {
+    name?: string; phone?: string; palika?: string; ward?: number; rank?: string;
+  };
+  const set: Record<string, unknown> = {};
+  if (name   !== undefined) set.name   = name;
+  if (phone  !== undefined) set.phone  = phone;
+  if (palika !== undefined) set.palika = palika;
+  if (ward   !== undefined) set.ward   = ward;
+  if (rank   !== undefined) set.rank   = rank;
+
+  const [updated] = await db
+    .update(teamMembersTable)
+    .set(set)
+    .where(eq(teamMembersTable.id, id))
+    .returning();
+
+  if (!updated) return res.status(404).json({ error: "Member not found" });
+  return res.json(formatMember(updated));
+});
+
+router.delete("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid ID" });
+
+  const [deleted] = await db
+    .delete(teamMembersTable)
+    .where(eq(teamMembersTable.id, id))
+    .returning();
+
+  if (!deleted) return res.status(404).json({ error: "Member not found" });
+  return res.json({ deleted: 1 });
+});
+
 router.patch("/:id/rank", async (req, res) => {
   const paramsParsed = UpdateTeamRankParams.safeParse({ id: Number(req.params.id) });
   if (!paramsParsed.success) return res.status(400).json({ error: "Invalid ID" });
