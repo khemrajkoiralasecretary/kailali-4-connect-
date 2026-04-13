@@ -39,7 +39,7 @@ export default function About() {
     },
     {
       icon: CheckCircle2,
-      title: language === "NP" ? "समाधान भएका" : "Resolved",
+      title: language === "NP" ? "समाधान भएका" : "Solved",
       value: String(stats?.resolved ?? 0),
       colorCls: "bg-emerald-50 text-emerald-600",
     },

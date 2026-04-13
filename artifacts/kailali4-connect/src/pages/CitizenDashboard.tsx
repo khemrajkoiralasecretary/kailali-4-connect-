@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 
 const statusConfig: Record<string, { label: string; npLabel: string; cls: string; icon: typeof Clock }> = {
   pending:     { label: "Pending",     npLabel: "विचाराधीन", cls: "bg-yellow-100 text-yellow-800", icon: Clock },
-  in_progress: { label: "In Progress", npLabel: "प्रगतिमा",  cls: "bg-blue-100 text-blue-800",   icon: Loader2 },
-  resolved:    { label: "Resolved",    npLabel: "समाधान",    cls: "bg-green-100 text-green-800",  icon: CheckCircle2 },
+  in_progress: { label: "Processing", npLabel: "प्रक्रियामा", cls: "bg-blue-100 text-blue-800",  icon: Loader2 },
+  resolved:    { label: "Solved",     npLabel: "समाधान",     cls: "bg-green-100 text-green-800", icon: CheckCircle2 },
 };
 
 export default function CitizenDashboard() {
@@ -83,8 +83,8 @@ export default function CitizenDashboard() {
         {[
           { label: language === "NP" ? "कुल" : "Total", value: stats.total, cls: "text-foreground" },
           { label: language === "NP" ? "विचाराधीन" : "Pending", value: stats.pending, cls: "text-yellow-600" },
-          { label: language === "NP" ? "प्रगतिमा" : "In Progress", value: stats.inProgress, cls: "text-blue-600" },
-          { label: language === "NP" ? "समाधान" : "Resolved", value: stats.resolved, cls: "text-green-600" },
+          { label: language === "NP" ? "प्रक्रियामा" : "Processing", value: stats.inProgress, cls: "text-blue-600" },
+          { label: language === "NP" ? "समाधान" : "Solved", value: stats.resolved, cls: "text-green-600" },
         ].map(({ label, value, cls }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-3 text-center">
             <p className={cn("text-xl font-bold", cls)}>{value}</p>

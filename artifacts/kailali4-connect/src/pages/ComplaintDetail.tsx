@@ -22,8 +22,8 @@ const STATUS_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
 const STATUS_OPTIONS = ["pending", "in_progress", "resolved"] as const;
 
 const STATUS_LABELS: Record<string, Record<string, string>> = {
-  EN: { pending: "Pending", in_progress: "In Progress", resolved: "Resolved" },
-  NP: { pending: "विचाराधीन", in_progress: "प्रगतिमा", resolved: "समाधान" },
+  EN: { pending: "Pending", in_progress: "Processing", resolved: "Solved" },
+  NP: { pending: "विचाराधीन", in_progress: "प्रक्रियामा", resolved: "समाधान" },
 };
 
 const CATEGORY_LABELS: Record<string, Record<string, string>> = {

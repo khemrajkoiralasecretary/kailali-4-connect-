@@ -60,9 +60,9 @@ const STATUS_OPTIONS = ["pending", "in_progress", "resolved"] as const;
 type StatusType = typeof STATUS_OPTIONS[number];
 
 const statusConfig: Record<StatusType, { label: string; labelNp: string; cls: string }> = {
-  pending:     { label: "Pending",     labelNp: "विचाराधीन",   cls: "bg-orange-100 text-orange-700 border-orange-200" },
-  in_progress: { label: "In Progress", labelNp: "प्रगतिमा",   cls: "bg-blue-100 text-blue-700 border-blue-200" },
-  resolved:    { label: "Resolved",    labelNp: "समाधान",      cls: "bg-green-100 text-green-700 border-green-200" },
+  pending:     { label: "Pending",    labelNp: "विचाराधीन",   cls: "bg-orange-100 text-orange-700 border-orange-200" },
+  in_progress: { label: "Processing", labelNp: "प्रक्रियामा", cls: "bg-blue-100 text-blue-700 border-blue-200" },
+  resolved:    { label: "Solved",     labelNp: "समाधान",      cls: "bg-green-100 text-green-700 border-green-200" },
 };
 const rankConfig: Record<string, { label: string; cls: string }> = {
   volunteer:   { label: "Volunteer",   cls: "bg-gray-100 text-gray-600" },
@@ -239,8 +239,8 @@ function AnalyticsTab() {
   const items = [
     { label: language === "NP" ? "कुल उजुरी" : "Total Complaints",  value: stats?.total ?? 0,       cls: "text-primary" },
     { label: language === "NP" ? "विचाराधीन" : "Pending",           value: stats?.pending ?? 0,     cls: "text-orange-600" },
-    { label: language === "NP" ? "प्रगतिमा" : "In Progress",        value: stats?.inProgress ?? 0,  cls: "text-blue-600" },
-    { label: language === "NP" ? "समाधान" : "Resolved",             value: stats?.resolved ?? 0,    cls: "text-green-600" },
+    { label: language === "NP" ? "प्रक्रियामा" : "Processing",       value: stats?.inProgress ?? 0,  cls: "text-blue-600" },
+    { label: language === "NP" ? "समाधान" : "Solved",               value: stats?.resolved ?? 0,    cls: "text-green-600" },
     { label: language === "NP" ? "विचारहरू" : "Ideas",              value: stats?.totalIdeas ?? 0,  cls: "text-yellow-600" },
     { label: language === "NP" ? "समाचार" : "News",                 value: stats?.totalNews ?? 0,   cls: "text-purple-600" },
     { label: language === "NP" ? "टोली सदस्य" : "Team Members",    value: teamMembers?.length ?? 0, cls: "text-primary" },
@@ -1134,7 +1134,7 @@ function AlertsTab() {
         <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-xl">
           <Clock size={15} className="text-yellow-600" />
           <span className="text-sm font-semibold text-yellow-700">{inProgressComplaints.length}</span>
-          <span className="text-xs text-yellow-600">{t("In Progress", "प्रक्रियामा")}</span>
+          <span className="text-xs text-yellow-600">{t("Processing", "प्रक्रियामा")}</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl">
           <UserCheck size={15} className="text-blue-600" />
@@ -1197,7 +1197,7 @@ function AlertsTab() {
               <div className="flex items-center gap-2">
                 <Clock size={15} className="text-yellow-600" />
                 <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                  {t("In Progress", "प्रक्रियामा")}
+                  {t("Processing", "प्रक्रियामा")}
                   <span className="ml-2 text-xs bg-yellow-500 text-white rounded-full px-1.5 py-0.5 font-bold">{inProgressComplaints.length}</span>
                 </h3>
               </div>

@@ -34,9 +34,9 @@ const statusIcons: Record<string, React.ComponentType<{ size?: number }>> = {
 };
 
 const trackStatusConfig = {
-  pending:     { label: "Pending",     labelNp: "विचाराधीन", cls: "bg-orange-100 text-orange-700 border-orange-200" },
-  in_progress: { label: "In Progress", labelNp: "प्रगतिमा",  cls: "bg-blue-100 text-blue-700 border-blue-200" },
-  resolved:    { label: "Resolved",    labelNp: "समाधान",    cls: "bg-green-100 text-green-700 border-green-200" },
+  pending:     { label: "Pending",    labelNp: "विचाराधीन",   cls: "bg-orange-100 text-orange-700 border-orange-200" },
+  in_progress: { label: "Processing", labelNp: "प्रक्रियामा", cls: "bg-blue-100 text-blue-700 border-blue-200" },
+  resolved:    { label: "Solved",     labelNp: "समाधान",      cls: "bg-green-100 text-green-700 border-green-200" },
 };
 
 type TrackedComplaint = {
@@ -169,8 +169,8 @@ function ComplaintTracker() {
               const done    = sIdx <= curIdx;
               const labels  = {
                 pending:     language === "NP" ? "दर्ता" : "Filed",
-                in_progress: language === "NP" ? "प्रक्रिया" : "In Progress",
-                resolved:    language === "NP" ? "समाधान" : "Resolved",
+                in_progress: language === "NP" ? "प्रक्रियामा" : "Processing",
+                resolved:    language === "NP" ? "समाधान" : "Solved",
               };
               return (
                 <div key={s} className="flex items-center gap-2 flex-1">
@@ -235,7 +235,7 @@ export default function Dashboard() {
   const wardChartData = wardBreakdown?.map((w) => ({
     name: `${t("dashboard.ward")} ${w.ward}`,
     Total: w.total,
-    Resolved: w.resolved,
+    Solved: w.resolved,
   }));
 
   return (
@@ -321,7 +321,7 @@ export default function Dashboard() {
                   }}
                 />
                 <Bar dataKey="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Resolved" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Solved" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
