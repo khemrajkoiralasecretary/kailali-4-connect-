@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Wallet, TrendingUp, TrendingDown, Scale, Trophy, QrCode } from "lucide-react";
 
 type Donation = { id: number; name: string; amount: number; date: string; created_at: string };
-type Expense  = { id: number; title: string; amount: number; created_at: string };
+type Expense  = { id: number; title: string; amount: number; date: string; created_at: string };
 type Summary  = { totalDonations: number; totalExpenses: number; balance: number; donorCount: number };
 
 const BASE = "/api/fund";
@@ -158,7 +158,10 @@ export default function Fund() {
                   transition={{ delay: i * 0.04 }}
                   className="flex items-center justify-between py-2 border-b border-border last:border-0"
                 >
-                  <span className="text-sm text-foreground">{e.title}</span>
+                  <div>
+                    <p className="text-sm text-foreground">{e.title}</p>
+                    {e.date && <p className="text-xs text-muted-foreground">{String(e.date).slice(0, 10)}</p>}
+                  </div>
                   <span className="text-sm font-semibold text-red-700">{fmt(e.amount)}</span>
                 </motion.div>
               ))}

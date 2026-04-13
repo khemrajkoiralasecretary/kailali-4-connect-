@@ -59,12 +59,13 @@ router.get("/expenses", async (_req, res) => {
 
 // ── ADMIN: add expense ───────────────────────────────────────────────────────
 router.post("/expenses", requireSuperAdmin, async (req, res) => {
-  const { title, amount } = req.body ?? {};
+  const { title, amount, date } = req.body ?? {};
   if (!title || !amount) return res.status(400).json({ error: "title and amount are required" });
   const n = Number(amount);
   if (isNaN(n) || n <= 0) return res.status(400).json({ error: "amount must be a positive number" });
+  const d = date ?? new Date().toISOString().split("T")[0];
   const result = await db.execute(
-    sql`INSERT INTO expenses (title, amount) VALUES (${title}, ${n}) RETURNING *`
+    sql`INSERT INTO expenses (title, amount, date) VALUES (${title}, ${n}, ${d}::date) RETURNING *`
   );
   return res.status(201).json(result.rows[0]);
 });
