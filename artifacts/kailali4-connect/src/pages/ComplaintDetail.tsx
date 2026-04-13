@@ -64,6 +64,7 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
     women_children:"महिला, बालबालिका तथा ज्येष्ठ नागरिक मन्त्रालय",
     culture_tourism:"संस्कृति, पर्यटन तथा नागरिक उड्डयन मन्त्रालय",
     communication: "सञ्चार तथा सूचना प्रविधि मन्त्रालय",
+    corruption:    "भ्रष्टाचार / दुर्व्यवहार",
   },
 };
 

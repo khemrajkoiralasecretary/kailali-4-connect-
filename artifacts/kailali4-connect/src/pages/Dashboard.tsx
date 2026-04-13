@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar } from "lucide-react";
+import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
@@ -194,7 +194,7 @@ function StatCard({ label, value, icon: Icon, colorClass }: { label: string; val
 }
 
 export default function Dashboard() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
   const { data: wardBreakdown, isLoading: wardLoading } = useGetWardBreakdown();
   const { data: activity, isLoading: activityLoading } = useGetRecentActivity();
@@ -225,6 +225,12 @@ export default function Dashboard() {
             <button className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
               <Lightbulb size={15} />
               {t("btn.submitIdea")}
+            </button>
+          </Link>
+          <Link href="/report-corruption">
+            <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
+              <ShieldAlert size={15} />
+              {language === "NP" ? "भ्रष्टाचार रिपोर्ट" : "Report Corruption"}
             </button>
           </Link>
         </div>
