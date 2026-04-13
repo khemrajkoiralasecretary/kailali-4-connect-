@@ -27,6 +27,7 @@ export * from "./listTeamMembersParams";
 export * from "./listTeamMembersRank";
 export * from "./mpProfile";
 export * from "./newsItem";
+export * from "./socialLinks";
 export * from "./teamMember";
 export * from "./teamMemberRank";
 export * from "./updateComplaintStatusBody";

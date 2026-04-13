@@ -33,6 +33,7 @@ import type {
   ListTeamMembersParams,
   MpProfile,
   NewsItem,
+  SocialLinks,
   TeamMember,
   UpdateComplaintStatusBody,
   UpdateRankBody,
@@ -1097,6 +1098,167 @@ export function useGetWardBreakdown<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get social media links
+ */
+export const getGetSocialLinksUrl = () => {
+  return `/api/settings/social-links`;
+};
+
+export const getSocialLinks = async (
+  options?: RequestInit,
+): Promise<SocialLinks> => {
+  return customFetch<SocialLinks>(getGetSocialLinksUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSocialLinksQueryKey = () => {
+  return [`/api/settings/social-links`] as const;
+};
+
+export const getGetSocialLinksQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSocialLinks>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSocialLinks>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSocialLinksQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSocialLinks>>> = ({
+    signal,
+  }) => getSocialLinks({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSocialLinks>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSocialLinksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSocialLinks>>
+>;
+export type GetSocialLinksQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get social media links
+ */
+
+export function useGetSocialLinks<
+  TData = Awaited<ReturnType<typeof getSocialLinks>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSocialLinks>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSocialLinksQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update social media links
+ */
+export const getUpdateSocialLinksUrl = () => {
+  return `/api/settings/social-links`;
+};
+
+export const updateSocialLinks = async (
+  socialLinks: SocialLinks,
+  options?: RequestInit,
+): Promise<SocialLinks> => {
+  return customFetch<SocialLinks>(getUpdateSocialLinksUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(socialLinks),
+  });
+};
+
+export const getUpdateSocialLinksMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSocialLinks>>,
+    TError,
+    { data: BodyType<SocialLinks> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSocialLinks>>,
+  TError,
+  { data: BodyType<SocialLinks> },
+  TContext
+> => {
+  const mutationKey = ["updateSocialLinks"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSocialLinks>>,
+    { data: BodyType<SocialLinks> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateSocialLinks(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSocialLinksMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSocialLinks>>
+>;
+export type UpdateSocialLinksMutationBody = BodyType<SocialLinks>;
+export type UpdateSocialLinksMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update social media links
+ */
+export const useUpdateSocialLinks = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSocialLinks>>,
+    TError,
+    { data: BodyType<SocialLinks> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateSocialLinks>>,
+  TError,
+  { data: BodyType<SocialLinks> },
+  TContext
+> => {
+  return useMutation(getUpdateSocialLinksMutationOptions(options));
+};
 
 /**
  * @summary Get home page content settings

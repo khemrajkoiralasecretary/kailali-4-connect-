@@ -188,6 +188,30 @@ export const GetWardBreakdownResponseItem = zod.object({
 export const GetWardBreakdownResponse = zod.array(GetWardBreakdownResponseItem);
 
 /**
+ * @summary Get social media links
+ */
+export const GetSocialLinksResponse = zod.object({
+  facebook: zod.string().nullish(),
+  youtube: zod.string().nullish(),
+  website: zod.string().nullish(),
+});
+
+/**
+ * @summary Update social media links
+ */
+export const UpdateSocialLinksBody = zod.object({
+  facebook: zod.string().nullish(),
+  youtube: zod.string().nullish(),
+  website: zod.string().nullish(),
+});
+
+export const UpdateSocialLinksResponse = zod.object({
+  facebook: zod.string().nullish(),
+  youtube: zod.string().nullish(),
+  website: zod.string().nullish(),
+});
+
+/**
  * @summary Get home page content settings
  */
 export const GetHomeContentResponse = zod.object({

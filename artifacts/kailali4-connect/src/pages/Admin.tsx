@@ -6,13 +6,15 @@ import {
   useListComplaints, useDeleteComplaint, useUpdateComplaintStatus,
   useDeleteTeamMember, useEditTeamMember, useJoinTeam, useUpdateTeamRank,
   useGetHomeContent, useUpdateHomeContent,
+  useGetSocialLinks, useUpdateSocialLinks,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, LogOut, User, Palette, Users, FileText, BarChart2,
   Save, Trash2, Eye, EyeOff, Check, Lock, Home, Edit2, X,
-  Plus, ChevronDown, Shield, UserCheck, Search, AlertTriangle,
+  Plus, Shield, UserCheck, Search, AlertTriangle,
+  Facebook, Youtube, Globe, Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -583,6 +585,22 @@ function HomeContentTab() {
     if (homeContent) setForm({ welcome: homeContent.welcome, footer: homeContent.footer });
   }, [homeContent]);
 
+  // Social links
+  const { data: socialLinks } = useGetSocialLinks();
+  const updateSocial = useUpdateSocialLinks({
+    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: ["getSocialLinks"] }); setSocialSaved(true); setTimeout(() => setSocialSaved(false), 2000); } },
+  });
+  const [socialForm, setSocialForm] = useState({ facebook: "", youtube: "", website: "" });
+  const [socialSaved, setSocialSaved] = useState(false);
+
+  useEffect(() => {
+    if (socialLinks) setSocialForm({
+      facebook: socialLinks.facebook ?? "",
+      youtube:  socialLinks.youtube  ?? "",
+      website:  socialLinks.website  ?? "",
+    });
+  }, [socialLinks]);
+
   const SECTIONS = ["complaints", "ideas", "news", "team", "directory"] as const;
   type SectionKey = typeof SECTIONS[number];
   const [visible, setVisible] = useState<Record<SectionKey, boolean>>(() => {
@@ -637,6 +655,47 @@ function HomeContentTab() {
             {saved ? <Check size={14} /> : <Save size={14} />}
             {saved ? (language === "NP" ? "सेभ भयो!" : "Saved!") : (language === "NP" ? "सेभ गर्नुहोस्" : "Save Content")}
           </button>
+        </div>
+      </Section>
+
+      <Section icon={Link2} title={language === "NP" ? "सामाजिक सञ्जाल लिंकहरू" : "Social Media Links"}>
+        <div className="space-y-3">
+          {[
+            { field: "facebook" as const, icon: Facebook, label: "Facebook", placeholder: "https://facebook.com/yourpage", color: "text-blue-600" },
+            { field: "youtube"  as const, icon: Youtube,  label: "YouTube",  placeholder: "https://youtube.com/@yourchannel", color: "text-red-600" },
+            { field: "website"  as const, icon: Globe,    label: "Website",  placeholder: "https://yourwebsite.gov.np", color: "text-green-600" },
+          ].map(({ field, icon: Icon, label, placeholder, color }) => (
+            <div key={field}>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <Icon size={12} className={color} /> {label}
+              </label>
+              <input
+                value={socialForm[field]}
+                onChange={(e) => setSocialForm({ ...socialForm, [field]: e.target.value })}
+                placeholder={placeholder}
+                className="mt-1 w-full border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => updateSocial.mutate({ data: {
+              facebook: socialForm.facebook || undefined,
+              youtube:  socialForm.youtube  || undefined,
+              website:  socialForm.website  || undefined,
+            }})}
+            disabled={updateSocial.isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            {socialSaved ? <Check size={14} /> : <Save size={14} />}
+            {socialSaved
+              ? (language === "NP" ? "सेभ भयो!" : "Saved!")
+              : (language === "NP" ? "लिंकहरू सेभ गर्नुहोस्" : "Save Links")}
+          </button>
+          <p className="text-xs text-muted-foreground">
+            {language === "NP"
+              ? "सेभ गरेपछि फुटरमा स्वतः देखिन्छ।"
+              : "Links appear in the site footer once saved. Leave blank to hide."}
+          </p>
         </div>
       </Section>
 

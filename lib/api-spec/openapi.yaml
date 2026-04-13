@@ -249,6 +249,36 @@ paths:
                 items:
                   $ref: "#/components/schemas/WardStat"
 
+  /settings/social-links:
+    get:
+      operationId: getSocialLinks
+      tags: [settings]
+      summary: Get social media links
+      responses:
+        "200":
+          description: Social links
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialLinks"
+    patch:
+      operationId: updateSocialLinks
+      tags: [settings]
+      summary: Update social media links
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SocialLinks"
+      responses:
+        "200":
+          description: Updated social links
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialLinks"
+
   /settings/home-content:
     get:
       operationId: getHomeContent
@@ -658,6 +688,19 @@ components:
         - ward
         - total
         - resolved
+
+    SocialLinks:
+      type: object
+      properties:
+        facebook:
+          type: string
+          nullable: true
+        youtube:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
 
     HomeContent:
       type: object

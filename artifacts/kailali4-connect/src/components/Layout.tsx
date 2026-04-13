@@ -1,10 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
-import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, ShieldCheck, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, ShieldCheck, Menu, X, Facebook, Youtube, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useGetSocialLinks } from "@workspace/api-client-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,6 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const { t, language, setLanguage } = useI18n();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: socialLinks } = useGetSocialLinks();
 
   const navItems = [
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
@@ -131,9 +132,50 @@ export default function Layout({ children }: LayoutProps) {
         </motion.div>
       </main>
 
-      <footer className="border-t border-border bg-card text-muted-foreground text-xs py-4 text-center">
-        <div className="max-w-7xl mx-auto px-4">
-          Kailali Constituency 4 — Digital Governance Platform &mdash; Serving with Transparency
+      <footer className="border-t border-border bg-card text-muted-foreground text-xs py-5">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span>Kailali Constituency 4 — Digital Governance Platform &mdash; Serving with Transparency</span>
+
+          {(socialLinks?.facebook || socialLinks?.youtube || socialLinks?.website) && (
+            <div className="flex items-center gap-3">
+              {socialLinks.facebook && (
+                <a
+                  href={socialLinks.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Facebook"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-200"
+                >
+                  <Facebook size={13} />
+                  <span className="font-medium">Facebook</span>
+                </a>
+              )}
+              {socialLinks.youtube && (
+                <a
+                  href={socialLinks.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="YouTube"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-200"
+                >
+                  <Youtube size={13} />
+                  <span className="font-medium">YouTube</span>
+                </a>
+              )}
+              {socialLinks.website && (
+                <a
+                  href={socialLinks.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Website"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors border border-green-200"
+                >
+                  <Globe size={13} />
+                  <span className="font-medium">Website</span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </footer>
     </div>

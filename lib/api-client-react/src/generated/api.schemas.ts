@@ -99,6 +99,12 @@ export interface WardStat {
   resolved: number;
 }
 
+export interface SocialLinks {
+  facebook?: string | null;
+  youtube?: string | null;
+  website?: string | null;
+}
+
 export interface HomeContent {
   welcome: string;
   footer: string;
