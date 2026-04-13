@@ -16,6 +16,7 @@ import {
   Save, Trash2, Eye, EyeOff, Check, Lock, Home, Edit2, X,
   Plus, Shield, UserCheck, Search, AlertTriangle, Upload,
   Facebook, Youtube, Globe, Link2,
+  Bell, ShieldAlert, Clock, ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,7 @@ function saveCredentials(creds: { admin: string; coord: string; leader: string }
 }
 
 type AdminRole = "super_admin" | "coordinator" | "leader";
-type TabKey = "analytics" | "complaints" | "team" | "applications" | "home" | "theme" | "profile";
+type TabKey = "analytics" | "alerts" | "complaints" | "team" | "applications" | "home" | "theme" | "profile";
 
 const THEMES = [
   { key: "red",    label: "Red",    labelNp: "रातो",  color: "bg-red-600" },
@@ -1023,6 +1024,202 @@ function ApplicationsTab() {
   );
 }
 
+// ── ALERTS TAB ────────────────────────────────────────────────────────────────
+const PALIKA_LABELS: Record<string, string> = {
+  godawari: "Godawari", gauriganga: "Gauriganga", chure: "Chure", mohanyal: "Mohanyal",
+};
+const COMPLAINT_CAT_LABELS: Record<string, string> = {
+  pm_council: "PM & Council", finance: "Finance", infrastructure: "Infrastructure",
+  health: "Health", education: "Education", agriculture: "Agriculture",
+  foreign_affairs: "Foreign Affairs", law_justice: "Law & Justice", home_affairs: "Home Affairs",
+  defence: "Defence", forests: "Forests", energy: "Energy", industry: "Industry",
+  urban: "Urban Dev.", women_children: "Women & Children",
+  culture_tourism: "Culture & Tourism", communication: "Communication",
+  corruption: "Corruption / Misconduct",
+};
+
+function AlertsTab() {
+  const { language } = useI18n();
+  const { data: complaints = [], isLoading: cLoading } = useListComplaints({});
+  const { data: applications = [], isLoading: aLoading } = useListTeamApplications({});
+
+  const t = (en: string, np: string) => language === "NP" ? np : en;
+
+  const corruptionAlerts = complaints.filter(c => c.category === "corruption" && c.status !== "resolved");
+  const pendingComplaints = complaints.filter(c => c.status === "pending" && c.category !== "corruption");
+  const pendingApps = applications.filter(a => a.status === "pending");
+  const inProgressComplaints = complaints.filter(c => c.status === "in_progress" && c.category !== "corruption");
+
+  const totalAlerts = corruptionAlerts.length + pendingComplaints.length + pendingApps.length;
+
+  if (cLoading || aLoading) {
+    return (
+      <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+        <Clock size={16} className="mr-2 animate-spin" />
+        {t("Loading alerts...", "अलर्ट लोड हुँदैछ...")}
+      </div>
+    );
+  }
+
+  const renderComplaintRow = (c: typeof complaints[number], urgent?: boolean) => (
+    <div key={c.id} className={cn(
+      "flex items-start gap-3 p-3 rounded-xl border transition-colors",
+      urgent ? "bg-red-50 border-red-200" : "bg-card border-border hover:bg-muted/50"
+    )}>
+      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+        urgent ? "bg-red-100" : "bg-orange-100"
+      )}>
+        {urgent ? <ShieldAlert size={16} className="text-red-600" /> : <FileText size={16} className="text-orange-600" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+          <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0",
+            urgent ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
+          )}>
+            {urgent ? t("Corruption", "भ्रष्टाचार") : t("Pending", "विचाराधीन")}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {PALIKA_LABELS[c.palika] ?? c.palika} · {t("Ward", "वार्ड")} {c.ward} ·{" "}
+          {COMPLAINT_CAT_LABELS[c.category] ?? c.category}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+          {c.description}
+        </p>
+      </div>
+      <span className="text-xs text-muted-foreground flex-shrink-0">#{c.id}</span>
+    </div>
+  );
+
+  const renderAppRow = (a: typeof applications[number]) => (
+    <div key={a.id} className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors">
+      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+        <UserCheck size={16} className="text-blue-600" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-medium text-foreground truncate">{a.name}</p>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium flex-shrink-0">
+            {t("Application", "आवेदन")}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {PALIKA_LABELS[a.palika?.toLowerCase()] ?? a.palika} · {t("Ward", "वार्ड")} {a.ward}
+        </p>
+        {a.skills && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.skills}</p>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Summary bar */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl">
+          <ShieldAlert size={15} className="text-red-600" />
+          <span className="text-sm font-semibold text-red-700">{corruptionAlerts.length}</span>
+          <span className="text-xs text-red-600">{t("Corruption Reports", "भ्रष्टाचार रिपोर्ट")}</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl">
+          <FileText size={15} className="text-orange-600" />
+          <span className="text-sm font-semibold text-orange-700">{pendingComplaints.length}</span>
+          <span className="text-xs text-orange-600">{t("Pending Complaints", "विचाराधीन उजुरी")}</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-xl">
+          <Clock size={15} className="text-yellow-600" />
+          <span className="text-sm font-semibold text-yellow-700">{inProgressComplaints.length}</span>
+          <span className="text-xs text-yellow-600">{t("In Progress", "प्रक्रियामा")}</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl">
+          <UserCheck size={15} className="text-blue-600" />
+          <span className="text-sm font-semibold text-blue-700">{pendingApps.length}</span>
+          <span className="text-xs text-blue-600">{t("Team Applications", "टोली आवेदन")}</span>
+        </div>
+      </div>
+
+      {totalAlerts === 0 && pendingApps.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Bell size={32} className="mx-auto mb-3 opacity-30" />
+          <p className="text-sm">{t("No pending alerts — all caught up!", "कुनै अलर्ट छैन — सबै ठीक छ!")}</p>
+        </div>
+      ) : (
+        <>
+          {/* Corruption alerts — highest priority */}
+          {corruptionAlerts.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={15} className="text-red-600" />
+                <h3 className="text-sm font-semibold text-red-700 uppercase tracking-wide">
+                  {t("Corruption Reports", "भ्रष्टाचार रिपोर्टहरू")}
+                  <span className="ml-2 text-xs bg-red-600 text-white rounded-full px-1.5 py-0.5 font-bold">{corruptionAlerts.length}</span>
+                </h3>
+              </div>
+              {corruptionAlerts.map(c => renderComplaintRow(c, true))}
+            </div>
+          )}
+
+          {/* Pending complaints */}
+          {pendingComplaints.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <FileText size={15} className="text-orange-600" />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                  {t("Pending Complaints", "विचाराधीन उजुरीहरू")}
+                  <span className="ml-2 text-xs bg-orange-500 text-white rounded-full px-1.5 py-0.5 font-bold">{pendingComplaints.length}</span>
+                </h3>
+              </div>
+              {pendingComplaints.map(c => renderComplaintRow(c, false))}
+            </div>
+          )}
+
+          {/* Pending applications */}
+          {pendingApps.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <UserCheck size={15} className="text-blue-600" />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                  {t("Pending Team Applications", "विचाराधीन टोली आवेदन")}
+                  <span className="ml-2 text-xs bg-blue-500 text-white rounded-full px-1.5 py-0.5 font-bold">{pendingApps.length}</span>
+                </h3>
+              </div>
+              {pendingApps.map(a => renderAppRow(a))}
+            </div>
+          )}
+
+          {inProgressComplaints.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Clock size={15} className="text-yellow-600" />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                  {t("In Progress", "प्रक्रियामा")}
+                  <span className="ml-2 text-xs bg-yellow-500 text-white rounded-full px-1.5 py-0.5 font-bold">{inProgressComplaints.length}</span>
+                </h3>
+              </div>
+              {inProgressComplaints.map(c => (
+                <div key={c.id} className="flex items-start gap-3 p-3 rounded-xl border border-yellow-200 bg-yellow-50/50">
+                  <div className="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                    <Clock size={16} className="text-yellow-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {PALIKA_LABELS[c.palika] ?? c.palika} · {t("Ward", "वार्ड")} {c.ward} · {COMPLAINT_CAT_LABELS[c.category] ?? c.category}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">#{c.id}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── MAIN ADMIN COMPONENT ──────────────────────────────────────────────────────
 export default function Admin() {
   const { language } = useI18n();
@@ -1051,6 +1248,14 @@ export default function Admin() {
     if (mpProfile) setMpForm({ name: mpProfile.name, message: mpProfile.message, photoUrl: mpProfile.photoUrl ?? "" });
   }, [mpProfile]);
 
+  // Alert badge counts (fetched here for the tab badge — AlertsTab does its own fetch internally)
+  const { data: _alertComplaints = [] } = useListComplaints({});
+  const { data: _alertApps = [] } = useListTeamApplications({});
+  const alertBadgeCount =
+    _alertComplaints.filter(c => c.category === "corruption" && c.status !== "resolved").length +
+    _alertComplaints.filter(c => c.status === "pending" && c.category !== "corruption").length +
+    _alertApps.filter(a => a.status === "pending").length;
+
   // Theme
   const [activeTheme, setActiveTheme] = useState<ThemeKey>(() => (localStorage.getItem("k4-theme") as ThemeKey) ?? "red");
   const handleTheme = (t: ThemeKey) => { applyTheme(t); setActiveTheme(t); };
@@ -1070,8 +1275,9 @@ export default function Admin() {
   const isCoordinator = role === "coordinator";
   const isLeader      = role === "leader";
 
-  const TABS: { key: TabKey; label: string; labelNp: string; icon: React.ComponentType<{ size?: number }> }[] = [
+  const TABS: { key: TabKey; label: string; labelNp: string; icon: React.ComponentType<{ size?: number }>; badge?: number }[] = [
     { key: "analytics",  label: "Analytics",  labelNp: "विश्लेषण",    icon: BarChart2 },
+    { key: "alerts",     label: "Alerts",     labelNp: "अलर्ट",       icon: Bell,     badge: alertBadgeCount > 0 ? alertBadgeCount : undefined },
     { key: "complaints", label: "Complaints", labelNp: "उजुरीहरू",    icon: FileText },
     ...(!isLeader ? [
       { key: "team" as TabKey,         label: "Team",         labelNp: "टोली",         icon: Users },
@@ -1149,6 +1355,11 @@ export default function Admin() {
             >
               <Icon size={14} />
               {language === "NP" ? tab.labelNp : tab.label}
+              {tab.badge !== undefined && tab.badge > 0 && (
+                <span className="ml-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {tab.badge > 99 ? "99+" : tab.badge}
+                </span>
+              )}
             </button>
           );
         })}
@@ -1164,6 +1375,7 @@ export default function Admin() {
           transition={{ duration: 0.15 }}
         >
           {safeTab === "analytics"    && <AnalyticsTab />}
+          {safeTab === "alerts"       && <AlertsTab />}
           {safeTab === "complaints"   && <ComplaintsTab role={role} />}
           {safeTab === "team"         && !isLeader && <TeamTab />}
           {safeTab === "applications" && !isLeader && <ApplicationsTab />}
