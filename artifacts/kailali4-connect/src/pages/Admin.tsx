@@ -1251,10 +1251,12 @@ function EventsTab() {
   const [editId, setEditId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [form, setForm] = useState({ title: "", description: "", eventType: "public_notice", eventDate: "", imageUrl: "" });
+  const [imgError, setImgError] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImgError(false);
     const reader = new FileReader();
     reader.onload = ev => setForm(f => ({ ...f, imageUrl: ev.target?.result as string }));
     reader.readAsDataURL(file);
@@ -1262,6 +1264,11 @@ function EventsTab() {
 
   const handleSubmit = async () => {
     if (!form.title.trim() || !form.description.trim()) return;
+    if (editId === null && !form.imageUrl) {
+      setImgError(true);
+      return;
+    }
+    setImgError(false);
     const payload = { title: form.title.trim(), description: form.description.trim(), eventType: form.eventType, imageUrl: form.imageUrl || undefined, eventDate: form.eventDate || undefined };
     if (editId !== null) {
       await updateEv.mutateAsync({ id: editId, data: payload });
@@ -1335,23 +1342,34 @@ function EventsTab() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{language === "NP" ? "तस्बिर (वैकल्पिक)" : "Image (Optional)"}</label>
-                <div className="mt-1 flex items-center gap-3">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {language === "NP" ? "तस्बिर" : "Image"}
+                  {editId === null && <span className="text-red-500 ml-0.5">*</span>}
+                </label>
+                <div className="mt-1 flex items-center gap-3 flex-wrap">
                   {form.imageUrl && (
                     <img src={form.imageUrl} alt="preview" className="w-16 h-16 rounded-lg object-cover border border-border flex-shrink-0" />
                   )}
-                  <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors">
+                  <label className={`cursor-pointer flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-muted transition-colors ${imgError ? "border-red-400 bg-red-50 text-red-600" : "border-border"}`}>
                     <Upload size={13} />
-                    {language === "NP" ? "तस्बिर छान्नुहोस्" : "Choose Image"}
+                    {form.imageUrl
+                      ? (language === "NP" ? "तस्बिर बदल्नुहोस्" : "Change Image")
+                      : (language === "NP" ? "तस्बिर छान्नुहोस्" : "Choose Image")}
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                   </label>
                   {form.imageUrl && (
-                    <button type="button" onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}
+                    <button type="button" onClick={() => { setForm(f => ({ ...f, imageUrl: "" })); setImgError(true); }}
                       className="text-xs text-destructive hover:underline flex items-center gap-1">
                       <X size={11} /> {language === "NP" ? "हटाउनुहोस्" : "Remove"}
                     </button>
                   )}
                 </div>
+                {imgError && (
+                  <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                    <X size={11} />
+                    {language === "NP" ? "कार्यक्रमको तस्बिर अनिवार्य छ" : "Image is required to post an event"}
+                  </p>
+                )}
               </div>
             </div>
 
