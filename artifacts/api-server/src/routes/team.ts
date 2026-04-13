@@ -1,26 +1,14 @@
 import { Router } from "express";
 import { db, teamMembersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { z } from "zod/v4";
+import {
+  ListTeamMembersQueryParams,
+  JoinTeamBody,
+  UpdateTeamRankParams,
+  UpdateTeamRankBody,
+} from "@workspace/api-zod";
 
 const router = Router();
-
-const JoinTeamBody = z.object({
-  name: z.string().min(1),
-  phone: z.string().optional(),
-  palika: z.string().min(1),
-  ward: z.number().int().positive(),
-  photoUrl: z.string().optional(),
-});
-
-const ListQueryParams = z.object({
-  palika: z.string().optional(),
-  rank: z.enum(["volunteer", "coordinator", "leader"]).optional(),
-});
-
-const UpdateRankBody = z.object({
-  rank: z.enum(["volunteer", "coordinator", "leader"]),
-});
 
 function formatMember(m: typeof teamMembersTable.$inferSelect) {
   return {
@@ -34,7 +22,7 @@ function generateCid(): string {
 }
 
 router.get("/", async (req, res) => {
-  const parsed = ListQueryParams.safeParse(req.query);
+  const parsed = ListTeamMembersQueryParams.safeParse(req.query);
   if (!parsed.success) return res.status(400).json({ error: "Invalid query params" });
 
   const { palika, rank } = parsed.data;
@@ -67,16 +55,16 @@ router.post("/", async (req, res) => {
 });
 
 router.patch("/:id/rank", async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid ID" });
+  const paramsParsed = UpdateTeamRankParams.safeParse({ id: Number(req.params.id) });
+  if (!paramsParsed.success) return res.status(400).json({ error: "Invalid ID" });
 
-  const parsed = UpdateRankBody.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: "Invalid request body" });
+  const bodyParsed = UpdateTeamRankBody.safeParse(req.body);
+  if (!bodyParsed.success) return res.status(400).json({ error: "Invalid request body" });
 
   const [updated] = await db
     .update(teamMembersTable)
-    .set({ rank: parsed.data.rank })
-    .where(eq(teamMembersTable.id, id))
+    .set({ rank: bodyParsed.data.rank })
+    .where(eq(teamMembersTable.id, paramsParsed.data.id))
     .returning();
 
   if (!updated) return res.status(404).json({ error: "Member not found" });

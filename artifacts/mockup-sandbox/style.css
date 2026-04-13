@@ -1,0 +1,33 @@
+body{
+  font-family:Arial;
+  margin:0;
+  background:#f1f5f9;
+}
+
+.box{
+  width:300px;
+  margin:100px auto;
+  padding:20px;
+  background:white;
+  border-radius:12px;
+  text-align:center;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+}
+
+button{
+  padding:10px;
+  margin:5px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:8px;
+}
+
+.admin{
+  padding:20px;
+}
