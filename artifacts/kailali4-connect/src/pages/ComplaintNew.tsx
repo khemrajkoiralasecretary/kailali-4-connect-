@@ -14,10 +14,51 @@ const PALIKA_WARDS: Record<string, { label: string; labelNp: string; wards: numb
   mohanyal:   { label: "Mohanyal Rural Municipality",  labelNp: "मोहन्याल गाउँपालिका",  wards: [5] },
 };
 
-const CATEGORIES_EN = ["road", "water", "electricity", "health", "education", "other"];
+const CATEGORIES_EN = [
+  "pm_council", "finance", "infrastructure", "health", "education",
+  "agriculture", "foreign_affairs", "law_justice", "home_affairs", "defence",
+  "forests", "energy", "industry", "urban", "women_children",
+  "culture_tourism", "communication",
+];
 const CATEGORY_LABELS: Record<string, Record<string, string>> = {
-  EN: { road: "Road", water: "Water", electricity: "Electricity", health: "Health", education: "Education", other: "Other" },
-  NP: { road: "सडक", water: "पानी", electricity: "बिजुली", health: "स्वास्थ्य", education: "शिक्षा", other: "अन्य" },
+  EN: {
+    pm_council:    "Prime Minister & Council of Ministers",
+    finance:       "Ministry of Finance",
+    infrastructure:"Ministry of Physical Infrastructure & Transport",
+    health:        "Ministry of Health and Population",
+    education:     "Ministry of Education, Science & Technology",
+    agriculture:   "Ministry of Agriculture & Livestock Development",
+    foreign_affairs:"Ministry of Foreign Affairs",
+    law_justice:   "Ministry of Law, Justice & Parliamentary Affairs",
+    home_affairs:  "Ministry of Home Affairs",
+    defence:       "Ministry of Defence",
+    forests:       "Ministry of Forests & Environment",
+    energy:        "Ministry of Energy, Water Resources & Irrigation",
+    industry:      "Ministry of Industry, Commerce & Supplies",
+    urban:         "Ministry of Urban Development",
+    women_children:"Ministry of Women, Children & Senior Citizens",
+    culture_tourism:"Ministry of Culture, Tourism & Civil Aviation",
+    communication: "Ministry of Communication & Information Technology",
+  },
+  NP: {
+    pm_council:    "प्रधानमन्त्री तथा मन्त्रिपरिषद",
+    finance:       "अर्थ मन्त्रालय",
+    infrastructure:"भौतिक पूर्वाधार तथा यातायात मन्त्रालय",
+    health:        "स्वास्थ्य तथा जनसंख्या मन्त्रालय",
+    education:     "शिक्षा, विज्ञान तथा प्रविधि मन्त्रालय",
+    agriculture:   "कृषि तथा पशुपन्छी विकास मन्त्रालय",
+    foreign_affairs:"परराष्ट्र मन्त्रालय",
+    law_justice:   "कानून, न्याय तथा संसदीय मामिला मन्त्रालय",
+    home_affairs:  "गृह मन्त्रालय",
+    defence:       "रक्षा मन्त्रालय",
+    forests:       "वन तथा वातावरण मन्त्रालय",
+    energy:        "ऊर्जा, जलस्रोत तथा सिँचाइ मन्त्रालय",
+    industry:      "उद्योग, वाणिज्य तथा आपूर्ति मन्त्रालय",
+    urban:         "शहरी विकास मन्त्रालय",
+    women_children:"महिला, बालबालिका तथा ज्येष्ठ नागरिक मन्त्रालय",
+    culture_tourism:"संस्कृति, पर्यटन तथा नागरिक उड्डयन मन्त्रालय",
+    communication: "सञ्चार तथा सूचना प्रविधि मन्त्रालय",
+  },
 };
 
 export default function ComplaintNew() {
@@ -31,7 +72,7 @@ export default function ComplaintNew() {
     phone: "",
     palika: "",
     ward: 0,
-    category: "road",
+    category: "pm_council",
     description: "",
   });
 
