@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import { Wallet, TrendingUp, TrendingDown, Scale, Trophy, QrCode } from "lucide-react";
 
-type Donation = { id: number; name: string; amount: number; created_at: string };
+type Donation = { id: number; name: string; amount: number; date: string; created_at: string };
 type Expense  = { id: number; title: string; amount: number; created_at: string };
 type Summary  = { totalDonations: number; totalExpenses: number; balance: number; donorCount: number };
 
@@ -126,7 +126,10 @@ export default function Fund() {
                     }`}>
                       #{i + 1}
                     </span>
-                    <span className="text-sm font-medium text-foreground">{d.name}</span>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{d.name}</p>
+                      {d.date && <p className="text-xs text-muted-foreground">{String(d.date).slice(0, 10)}</p>}
+                    </div>
                   </div>
                   <span className="text-sm font-semibold text-green-700">{fmt(d.amount)}</span>
                 </motion.div>

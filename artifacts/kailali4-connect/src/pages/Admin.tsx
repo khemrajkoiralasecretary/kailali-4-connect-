@@ -1044,7 +1044,7 @@ function ApplicationsTab() {
 }
 
 // ── FUND TAB ──────────────────────────────────────────────────────────────────
-type Donation = { id: number; name: string; amount: number; created_at: string };
+type Donation = { id: number; name: string; amount: number; date: string; created_at: string };
 type Expense  = { id: number; title: string; amount: number; created_at: string };
 
 function FundTab() {
@@ -1075,14 +1075,15 @@ function FundTab() {
 
   const [dName, setDName]     = useState("");
   const [dAmount, setDAmount] = useState("");
+  const [dDate, setDDate]     = useState(() => new Date().toISOString().split("T")[0]);
   const [eTitle, setETitle]   = useState("");
   const [eAmount, setEAmount] = useState("");
   const [qrInput, setQrInput] = useState("");
   const [qrPreview, setQrPreview] = useState<string | null>(null);
 
   const addDonation = useMutation({
-    mutationFn: () => adminFetch("/api/fund/donations", { method: "POST", body: JSON.stringify({ name: dName.trim(), amount: Number(dAmount) }) }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["fundDonations"] }); setDName(""); setDAmount(""); },
+    mutationFn: () => adminFetch("/api/fund/donations", { method: "POST", body: JSON.stringify({ name: dName.trim(), amount: Number(dAmount), date: dDate }) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["fundDonations"] }); setDName(""); setDAmount(""); setDDate(new Date().toISOString().split("T")[0]); },
   });
   const delDonation = useMutation({
     mutationFn: (id: number) => adminFetch(`/api/fund/donations/${id}`, { method: "DELETE" }),
@@ -1136,9 +1137,10 @@ function FundTab() {
         {/* Donations */}
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-foreground">{NP ? "दान थप्नुस्" : "Add Donation"}</h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <input value={dName} onChange={e => setDName(e.target.value)} placeholder={NP ? "नाम" : "Name"} className={inputCls} />
             <input value={dAmount} onChange={e => setDAmount(e.target.value)} placeholder={NP ? "रकम" : "Amount"} type="number" min="1" className={inputCls} style={{ maxWidth: 100 }} />
+            <input value={dDate} onChange={e => setDDate(e.target.value)} type="date" className={inputCls} style={{ maxWidth: 140 }} />
             <button onClick={() => addDonation.mutate()} disabled={!dName.trim() || !dAmount || addDonation.isPending} className={btnCls}>
               {NP ? "थप" : "Add"}
             </button>
@@ -1146,7 +1148,10 @@ function FundTab() {
           <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
             {dLoad ? <div className="h-8 animate-pulse bg-muted rounded-lg" /> : donations.map((d, i) => (
               <div key={d.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg border border-border hover:bg-muted/40">
-                <span className="text-sm">#{i + 1} {d.name}</span>
+                <div>
+                  <span className="text-sm">#{i + 1} {d.name}</span>
+                  {d.date && <p className="text-xs text-muted-foreground">{String(d.date).slice(0, 10)}</p>}
+                </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-green-700">{fmt(d.amount)}</span>
                   <button onClick={() => delDonation.mutate(d.id)} className="p-1 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={12} /></button>

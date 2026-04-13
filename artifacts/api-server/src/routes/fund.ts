@@ -32,12 +32,13 @@ router.get("/donations", async (_req, res) => {
 
 // ── ADMIN: add donation ──────────────────────────────────────────────────────
 router.post("/donations", requireSuperAdmin, async (req, res) => {
-  const { name, amount } = req.body ?? {};
+  const { name, amount, date } = req.body ?? {};
   if (!name || !amount) return res.status(400).json({ error: "name and amount are required" });
   const n = Number(amount);
   if (isNaN(n) || n <= 0) return res.status(400).json({ error: "amount must be a positive number" });
+  const d = date ?? new Date().toISOString().split("T")[0];
   const result = await db.execute(
-    sql`INSERT INTO donations (name, amount) VALUES (${name}, ${n}) RETURNING *`
+    sql`INSERT INTO donations (name, amount, date) VALUES (${name}, ${n}, ${d}::date) RETURNING *`
   );
   return res.status(201).json(result.rows[0]);
 });
