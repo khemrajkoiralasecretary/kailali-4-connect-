@@ -177,6 +177,30 @@ export const GetWardBreakdownResponseItem = zod.object({
 export const GetWardBreakdownResponse = zod.array(GetWardBreakdownResponseItem);
 
 /**
+ * @summary Get MP profile settings
+ */
+export const GetMpProfileResponse = zod.object({
+  name: zod.string(),
+  message: zod.string(),
+  photoUrl: zod.string().optional(),
+});
+
+/**
+ * @summary Update MP profile settings
+ */
+export const UpdateMpProfileBody = zod.object({
+  name: zod.string(),
+  message: zod.string(),
+  photoUrl: zod.string().optional(),
+});
+
+export const UpdateMpProfileResponse = zod.object({
+  name: zod.string(),
+  message: zod.string(),
+  photoUrl: zod.string().optional(),
+});
+
+/**
  * @summary List all team members
  */
 export const ListTeamMembersQueryParams = zod.object({
@@ -206,6 +230,20 @@ export const JoinTeamBody = zod.object({
   palika: zod.string(),
   ward: zod.number(),
   photoUrl: zod.string().optional(),
+});
+
+/**
+ * @summary Delete all team members
+ */
+export const DeleteAllTeamMembersResponse = zod.object({
+  deleted: zod.number(),
+});
+
+/**
+ * @summary Delete all complaints
+ */
+export const DeleteAllComplaintsResponse = zod.object({
+  deleted: zod.number(),
 });
 
 /**

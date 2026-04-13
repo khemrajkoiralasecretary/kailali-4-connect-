@@ -99,6 +99,16 @@ export interface WardStat {
   resolved: number;
 }
 
+export interface MpProfile {
+  name: string;
+  message: string;
+  photoUrl?: string;
+}
+
+export interface DeleteAllResult {
+  deleted: number;
+}
+
 export type TeamMemberRank =
   (typeof TeamMemberRank)[keyof typeof TeamMemberRank];
 

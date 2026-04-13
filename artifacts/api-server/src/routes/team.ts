@@ -54,6 +54,11 @@ router.post("/", async (req, res) => {
   return res.status(201).json(formatMember(member));
 });
 
+router.delete("/all", async (_req, res) => {
+  const deleted = await db.delete(teamMembersTable).returning();
+  return res.json({ deleted: deleted.length });
+});
+
 router.patch("/:id/rank", async (req, res) => {
   const paramsParsed = UpdateTeamRankParams.safeParse({ id: Number(req.params.id) });
   if (!paramsParsed.success) return res.status(400).json({ error: "Invalid ID" });

@@ -23,11 +23,13 @@ import type {
   CreateIdeaBody,
   CreateNewsBody,
   DashboardStats,
+  DeleteAllResult,
   HealthStatus,
   Idea,
   JoinTeamBody,
   ListComplaintsParams,
   ListTeamMembersParams,
+  MpProfile,
   NewsItem,
   TeamMember,
   UpdateComplaintStatusBody,
@@ -1011,6 +1013,167 @@ export function useGetWardBreakdown<
 }
 
 /**
+ * @summary Get MP profile settings
+ */
+export const getGetMpProfileUrl = () => {
+  return `/api/settings/mp-profile`;
+};
+
+export const getMpProfile = async (
+  options?: RequestInit,
+): Promise<MpProfile> => {
+  return customFetch<MpProfile>(getGetMpProfileUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMpProfileQueryKey = () => {
+  return [`/api/settings/mp-profile`] as const;
+};
+
+export const getGetMpProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMpProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMpProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMpProfileQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMpProfile>>> = ({
+    signal,
+  }) => getMpProfile({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMpProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMpProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMpProfile>>
+>;
+export type GetMpProfileQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get MP profile settings
+ */
+
+export function useGetMpProfile<
+  TData = Awaited<ReturnType<typeof getMpProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMpProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMpProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update MP profile settings
+ */
+export const getUpdateMpProfileUrl = () => {
+  return `/api/settings/mp-profile`;
+};
+
+export const updateMpProfile = async (
+  mpProfile: MpProfile,
+  options?: RequestInit,
+): Promise<MpProfile> => {
+  return customFetch<MpProfile>(getUpdateMpProfileUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(mpProfile),
+  });
+};
+
+export const getUpdateMpProfileMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMpProfile>>,
+    TError,
+    { data: BodyType<MpProfile> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMpProfile>>,
+  TError,
+  { data: BodyType<MpProfile> },
+  TContext
+> => {
+  const mutationKey = ["updateMpProfile"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMpProfile>>,
+    { data: BodyType<MpProfile> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMpProfile(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMpProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMpProfile>>
+>;
+export type UpdateMpProfileMutationBody = BodyType<MpProfile>;
+export type UpdateMpProfileMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update MP profile settings
+ */
+export const useUpdateMpProfile = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMpProfile>>,
+    TError,
+    { data: BodyType<MpProfile> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMpProfile>>,
+  TError,
+  { data: BodyType<MpProfile> },
+  TContext
+> => {
+  return useMutation(getUpdateMpProfileMutationOptions(options));
+};
+
+/**
  * @summary List all team members
  */
 export const getListTeamMembersUrl = (params?: ListTeamMembersParams) => {
@@ -1188,6 +1351,168 @@ export const useJoinTeam = <
   TContext
 > => {
   return useMutation(getJoinTeamMutationOptions(options));
+};
+
+/**
+ * @summary Delete all team members
+ */
+export const getDeleteAllTeamMembersUrl = () => {
+  return `/api/team/all`;
+};
+
+export const deleteAllTeamMembers = async (
+  options?: RequestInit,
+): Promise<DeleteAllResult> => {
+  return customFetch<DeleteAllResult>(getDeleteAllTeamMembersUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAllTeamMembersMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAllTeamMembers>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAllTeamMembers>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["deleteAllTeamMembers"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAllTeamMembers>>,
+    void
+  > = () => {
+    return deleteAllTeamMembers(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAllTeamMembersMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAllTeamMembers>>
+>;
+
+export type DeleteAllTeamMembersMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete all team members
+ */
+export const useDeleteAllTeamMembers = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAllTeamMembers>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAllTeamMembers>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getDeleteAllTeamMembersMutationOptions(options));
+};
+
+/**
+ * @summary Delete all complaints
+ */
+export const getDeleteAllComplaintsUrl = () => {
+  return `/api/complaints/all`;
+};
+
+export const deleteAllComplaints = async (
+  options?: RequestInit,
+): Promise<DeleteAllResult> => {
+  return customFetch<DeleteAllResult>(getDeleteAllComplaintsUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAllComplaintsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAllComplaints>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAllComplaints>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["deleteAllComplaints"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAllComplaints>>,
+    void
+  > = () => {
+    return deleteAllComplaints(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAllComplaintsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAllComplaints>>
+>;
+
+export type DeleteAllComplaintsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete all complaints
+ */
+export const useDeleteAllComplaints = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAllComplaints>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAllComplaints>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getDeleteAllComplaintsMutationOptions(options));
 };
 
 /**

@@ -54,6 +54,11 @@ router.post("/", async (req, res) => {
   });
 });
 
+router.delete("/all", async (_req, res) => {
+  const deleted = await db.delete(complaintsTable).returning();
+  return res.json({ deleted: deleted.length });
+});
+
 router.get("/:id", async (req, res) => {
   const parsed = GetComplaintParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) {

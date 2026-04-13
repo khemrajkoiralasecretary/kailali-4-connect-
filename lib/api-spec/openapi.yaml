@@ -19,6 +19,8 @@ tags:
     description: Dashboard statistics and summaries
   - name: team
     description: Team member registry
+  - name: settings
+    description: Site settings and configuration
 paths:
   /healthz:
     get:
@@ -228,6 +230,36 @@ paths:
                 items:
                   $ref: "#/components/schemas/WardStat"
 
+  /settings/mp-profile:
+    get:
+      operationId: getMpProfile
+      tags: [settings]
+      summary: Get MP profile settings
+      responses:
+        "200":
+          description: MP profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MpProfile"
+    patch:
+      operationId: updateMpProfile
+      tags: [settings]
+      summary: Update MP profile settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MpProfile"
+      responses:
+        "200":
+          description: Updated MP profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MpProfile"
+
   /team:
     get:
       operationId: listTeamMembers
@@ -269,6 +301,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TeamMember"
+
+  /team/all:
+    delete:
+      operationId: deleteAllTeamMembers
+      tags: [team]
+      summary: Delete all team members
+      responses:
+        "200":
+          description: All team members deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAllResult"
+
+  /complaints/all:
+    delete:
+      operationId: deleteAllComplaints
+      tags: [complaints]
+      summary: Delete all complaints
+      responses:
+        "200":
+          description: All complaints deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAllResult"
 
   /team/{id}/rank:
     patch:
@@ -505,6 +563,27 @@ components:
         - ward
         - total
         - resolved
+
+    MpProfile:
+      type: object
+      properties:
+        name:
+          type: string
+        message:
+          type: string
+        photoUrl:
+          type: string
+      required:
+        - name
+        - message
+
+    DeleteAllResult:
+      type: object
+      properties:
+        deleted:
+          type: integer
+      required:
+        - deleted
 
     TeamMember:
       type: object

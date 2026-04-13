@@ -3,6 +3,7 @@ import {
   useGetDashboardStats,
   useGetWardBreakdown,
   useGetRecentActivity,
+  useGetMpProfile,
 } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
   const { data: wardBreakdown, isLoading: wardLoading } = useGetWardBreakdown();
   const { data: activity, isLoading: activityLoading } = useGetRecentActivity();
+  const { data: mpProfile } = useGetMpProfile();
 
   const wardChartData = wardBreakdown?.map((w) => ({
     name: `${t("dashboard.ward")} ${w.ward}`,
@@ -85,13 +87,15 @@ export default function Dashboard() {
 
       {/* MP Profile */}
       <div className="bg-primary text-primary-foreground rounded-xl p-6 flex items-center gap-5 shadow-md">
-        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-          <User size={32} className="opacity-80" />
+        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {mpProfile?.photoUrl
+            ? <img src={mpProfile.photoUrl} alt="MP" className="w-full h-full object-cover" />
+            : <User size={32} className="opacity-80" />}
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest opacity-70">{t("dashboard.mpProfile")}</p>
-          <h2 className="text-xl font-bold mt-1">Member of Parliament — Kailali-4</h2>
-          <p className="text-sm opacity-80 mt-1">Serving with transparency, accountability, and dedication to the people of Kailali Constituency 4</p>
+          <h2 className="text-xl font-bold mt-1">{mpProfile?.name ?? "Member of Parliament — Kailali-4"}</h2>
+          <p className="text-sm opacity-80 mt-1">{mpProfile?.message ?? "Serving with transparency, accountability, and dedication to the people of Kailali Constituency 4"}</p>
         </div>
       </div>
 

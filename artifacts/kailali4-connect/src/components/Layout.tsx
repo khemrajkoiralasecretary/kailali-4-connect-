@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
-import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, ShieldCheck, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,11 @@ export default function Layout({ children }: LayoutProps) {
               >
                 {language === "EN" ? "ने" : "EN"}
               </button>
+              <Link href="/admin" title="Admin">
+                <div className="w-8 h-8 bg-white/20 hover:bg-white/30 transition-colors rounded-full flex items-center justify-center cursor-pointer">
+                  <ShieldCheck size={15} />
+                </div>
+              </Link>
             </div>
           </div>
         </div>
