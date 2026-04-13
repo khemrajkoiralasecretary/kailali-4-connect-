@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { useCreateComplaint, getListComplaintsQueryKey } from "@workspace/api-client-react";
 import { useLocation, Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Send, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Send, ShieldAlert, AlertTriangle, CheckCircle2, Copy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PALIKA_WARDS: Record<string, { label: string; labelNp: string; wards: number[] }> = {
@@ -18,7 +18,8 @@ export default function CorruptionReport() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { mutateAsync, isPending } = useCreateComplaint();
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedTrackId, setSubmittedTrackId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -35,10 +36,18 @@ export default function CorruptionReport() {
     setForm({ ...form, palika: value, ward: 0 });
   };
 
+  const handleCopy = () => {
+    if (submittedTrackId) {
+      navigator.clipboard.writeText(submittedTrackId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.palika || !form.ward) return;
-    await mutateAsync({
+    const result = await mutateAsync({
       data: {
         name: form.name,
         phone: form.phone || undefined,
@@ -49,12 +58,12 @@ export default function CorruptionReport() {
       },
     });
     queryClient.invalidateQueries({ queryKey: getListComplaintsQueryKey() });
-    setSubmitted(true);
+    setSubmittedTrackId((result as { trackId?: string }).trackId ?? null);
   };
 
   const t = (en: string, np: string) => language === "NP" ? np : en;
 
-  if (submitted) {
+  if (submittedTrackId) {
     return (
       <div className="max-w-lg mx-auto mt-16 text-center space-y-5">
         <motion.div
@@ -73,6 +82,21 @@ export default function CorruptionReport() {
             "तपाईंको भ्रष्टाचार रिपोर्ट प्राप्त भएको छ र सांसद कार्यालयद्वारा गोप्य रूपमा समीक्षा गरिनेछ।"
           )}
         </p>
+        <div className="bg-muted border border-border rounded-xl p-4 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {t("Tracking ID", "ट्र्याकिङ ID")}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-lg font-mono font-bold text-red-600">{submittedTrackId}</span>
+            <button onClick={handleCopy}
+              className="p-1.5 rounded-lg hover:bg-border transition-colors text-muted-foreground">
+              {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("Use this ID on the Dashboard to track your report status", "ड्यासबोर्डमा यो ID प्रयोग गरेर रिपोर्टको स्थिति हेर्नुहोस्")}
+          </p>
+        </div>
         <div className="flex gap-3 justify-center pt-2">
           <button
             onClick={() => navigate("/")}

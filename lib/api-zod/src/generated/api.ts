@@ -33,6 +33,7 @@ export const ListComplaintsResponseItem = zod.object({
   status: zod.enum(["pending", "in_progress", "resolved"]),
   createdAt: zod.coerce.date(),
   citizenId: zod.number().nullish(),
+  trackId: zod.string().optional().nullable(),
   updatedAt: zod.coerce.date(),
 });
 export const ListComplaintsResponse = zod.array(ListComplaintsResponseItem);
@@ -67,6 +68,7 @@ export const GetComplaintResponse = zod.object({
   status: zod.enum(["pending", "in_progress", "resolved"]),
   createdAt: zod.coerce.date(),
   citizenId: zod.number().nullish(),
+  trackId: zod.string().optional().nullable(),
   updatedAt: zod.coerce.date(),
 });
 
@@ -440,6 +442,7 @@ export const GetCitizenComplaintsResponseItem = zod.object({
   status: zod.enum(["pending", "in_progress", "resolved"]),
   createdAt: zod.coerce.date(),
   citizenId: zod.number().nullish(),
+  trackId: zod.string().optional().nullable(),
   updatedAt: zod.coerce.date(),
 });
 export const GetCitizenComplaintsResponse = zod.array(

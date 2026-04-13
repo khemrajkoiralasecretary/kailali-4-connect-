@@ -47,10 +47,13 @@ router.post("/", async (req, res) => {
   const payload = token ? verifyToken(token) : null;
   const citizenId = payload?.citizenId ?? null;
 
+  const trackId = `K4-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
   const [complaint] = await db.insert(complaintsTable).values({
     ...parsed.data,
     palika: parsed.data.palika ?? "",
     citizenId,
+    trackId,
   }).returning();
 
   return res.status(201).json({
@@ -66,15 +69,24 @@ router.delete("/all", requireSuperAdmin, async (_req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const parsed = GetComplaintParams.safeParse({ id: Number(req.params.id) });
-  if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid complaint ID" });
-  }
+  const raw = req.params.id;
+  let complaint: typeof complaintsTable.$inferSelect | undefined;
 
-  const [complaint] = await db
-    .select()
-    .from(complaintsTable)
-    .where(eq(complaintsTable.id, parsed.data.id));
+  if (raw.startsWith("K4-")) {
+    [complaint] = await db
+      .select()
+      .from(complaintsTable)
+      .where(eq(complaintsTable.trackId, raw));
+  } else {
+    const numId = Number(raw);
+    if (isNaN(numId) || numId <= 0) {
+      return res.status(400).json({ error: "Invalid complaint ID" });
+    }
+    [complaint] = await db
+      .select()
+      .from(complaintsTable)
+      .where(eq(complaintsTable.id, numId));
+  }
 
   if (!complaint) return res.status(404).json({ error: "Complaint not found" });
 

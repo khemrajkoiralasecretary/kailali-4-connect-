@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { useCreateComplaint, getListComplaintsQueryKey } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Copy, Check } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 
@@ -68,6 +68,8 @@ export default function ComplaintNew() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { mutateAsync, isPending } = useCreateComplaint();
+  const [submittedTrackId, setSubmittedTrackId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -85,10 +87,18 @@ export default function ComplaintNew() {
     setForm({ ...form, palika: value, ward: 0 });
   };
 
+  const handleCopy = () => {
+    if (submittedTrackId) {
+      navigator.clipboard.writeText(submittedTrackId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.palika || !form.ward) return;
-    await mutateAsync({
+    const result = await mutateAsync({
       data: {
         name: form.name,
         phone: form.phone || undefined,
@@ -99,8 +109,54 @@ export default function ComplaintNew() {
       },
     });
     queryClient.invalidateQueries({ queryKey: getListComplaintsQueryKey() });
-    navigate("/complaints");
+    setSubmittedTrackId((result as { trackId?: string }).trackId ?? null);
   };
+
+  if (submittedTrackId) {
+    return (
+      <div className="max-w-lg mx-auto mt-12 text-center space-y-5">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+          <CheckCircle2 size={40} className="text-green-600" />
+        </motion.div>
+        <h2 className="text-xl font-bold text-foreground">
+          {language === "NP" ? "उजुरी पेश भयो!" : "Complaint Submitted!"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {language === "NP"
+            ? "तपाईंको उजुरी प्राप्त भयो। तलको ट्र्याकिङ ID सम्हालेर राख्नुहोस्।"
+            : "Your complaint has been received. Save your tracking ID to follow up."}
+        </p>
+        <div className="bg-muted border border-border rounded-xl p-4 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {language === "NP" ? "ट्र्याकिङ ID" : "Tracking ID"}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-lg font-mono font-bold text-primary">{submittedTrackId}</span>
+            <button onClick={handleCopy}
+              className="p-1.5 rounded-lg hover:bg-border transition-colors text-muted-foreground">
+              {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {language === "NP"
+              ? "ड्यासबोर्डमा यो ID प्रयोग गरेर स्थिति हेर्नुहोस्"
+              : "Use this ID on the Dashboard to track your complaint status"}
+          </p>
+        </div>
+        <div className="flex gap-3 justify-center pt-2">
+          <button onClick={() => navigate("/")}
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+            {language === "NP" ? "ड्यासबोर्ड" : "Go to Dashboard"}
+          </button>
+          <button onClick={() => navigate("/complaints")}
+            className="px-5 py-2.5 border border-border rounded-lg text-sm hover:bg-muted transition-colors">
+            {language === "NP" ? "सबै उजुरी" : "All Complaints"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

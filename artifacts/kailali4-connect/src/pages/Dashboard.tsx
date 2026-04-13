@@ -5,7 +5,6 @@ import {
   useGetWardBreakdown,
   useGetRecentActivity,
   useGetMpProfile,
-  useGetComplaint,
 } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -39,18 +38,37 @@ const trackStatusConfig = {
   resolved:    { label: "Resolved",    labelNp: "समाधान",    cls: "bg-green-100 text-green-700 border-green-200" },
 };
 
+type TrackedComplaint = {
+  id: number; name: string; description: string; status: string;
+  palika: string; ward: number; category: string; trackId?: string | null;
+  createdAt: string;
+};
+
 function ComplaintTracker() {
   const { language } = useI18n();
   const [inputVal, setInputVal] = useState("");
-  const [trackId, setTrackId]   = useState<number | null>(null);
+  const [data, setData]         = useState<TrackedComplaint | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError]   = useState(false);
+  const [searched, setSearched] = useState(false);
 
-  const { data, isLoading, isError } = useGetComplaint(trackId ?? 0, {
-    query: { enabled: trackId !== null && trackId > 0 },
-  });
-
-  const handleTrack = () => {
-    const id = parseInt(inputVal.trim(), 10);
-    if (!isNaN(id) && id > 0) setTrackId(id);
+  const handleTrack = async () => {
+    const val = inputVal.trim();
+    if (!val) return;
+    setIsLoading(true);
+    setIsError(false);
+    setData(null);
+    setSearched(true);
+    try {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${base}/api/complaints/${encodeURIComponent(val)}`);
+      if (!res.ok) throw new Error("Not found");
+      setData(await res.json());
+    } catch {
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const status = (data?.status ?? "pending") as keyof typeof trackStatusConfig;
@@ -74,13 +92,12 @@ function ComplaintTracker() {
 
       <div className="flex gap-2">
         <input
-          type="number"
-          min={1}
+          type="text"
           value={inputVal}
-          onChange={(e) => { setInputVal(e.target.value); setTrackId(null); }}
+          onChange={(e) => { setInputVal(e.target.value); setData(null); setIsError(false); setSearched(false); }}
           onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-          placeholder={language === "NP" ? "उजुरी ID (जस्तै: 1, 2, 3...)" : "Complaint ID (e.g. 1, 2, 3...)"}
-          className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          placeholder={language === "NP" ? "K4-... वा नम्बर ID" : "K4-... or numeric ID"}
+          className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary font-mono"
         />
         <button
           onClick={handleTrack}
@@ -96,7 +113,7 @@ function ComplaintTracker() {
         <div className="mt-3 h-20 animate-pulse bg-muted rounded-xl" />
       )}
 
-      {isError && trackId !== null && (
+      {isError && searched && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
@@ -104,8 +121,8 @@ function ComplaintTracker() {
         >
           <AlertCircle size={15} />
           {language === "NP"
-            ? `उजुरी #${trackId} फेला परेन। ID सही भए पनि डेटाबेसमा नभएको हुन सक्छ।`
-            : `Complaint #${trackId} not found. Please verify the ID number.`}
+            ? `"${inputVal}" ID भएको उजुरी फेला परेन। K4-... ट्र्याकिङ ID वा नम्बर प्रयोग गर्नुहोस्।`
+            : `No complaint found for "${inputVal}". Use your K4-... tracking ID or numeric ID.`}
         </motion.div>
       )}
 
@@ -118,7 +135,9 @@ function ComplaintTracker() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                {language === "NP" ? "उजुरी" : "Complaint"} #{data.id}
+                {data.trackId
+                  ? <span className="font-mono text-primary">{data.trackId}</span>
+                  : <>{language === "NP" ? "उजुरी" : "Complaint"} #{data.id}</>}
               </p>
               <p className="text-sm font-semibold text-foreground mt-0.5 leading-snug">{data.name}</p>
             </div>
