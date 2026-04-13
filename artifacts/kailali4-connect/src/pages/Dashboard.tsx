@@ -393,15 +393,15 @@ export default function Dashboard() {
                     transition={{ delay: idx * 0.07 }}
                     style={{
                       width: "100%",
-                      maxWidth: 240,
+                      maxWidth: 250,
                       aspectRatio: "4/5",
                       background: "white",
-                      borderRadius: 12,
+                      borderRadius: 10,
                       overflow: "hidden",
-                      boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
+                      margin: "10px auto",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
                       display: "flex",
                       flexDirection: "column",
-                      border: "1px solid hsl(var(--border))",
                     }}
                   >
                     <div style={{ height: "65%", width: "100%", flexShrink: 0, overflow: "hidden", background: "#f3f4f6" }}>
@@ -414,13 +414,13 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
-                    <div style={{ padding: 10, flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3 }}>
+                    <div style={{ padding: 8, flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 2 }}>
                       <b style={{ fontSize: 13, lineHeight: 1.3, display: "block" }}>{event.title}</b>
                       <small style={{ color: type.color, fontWeight: 600, fontSize: 10 }}>
                         {language === "NP" ? type.np : type.en}
                         {event.eventDate ? ` · ${event.eventDate}` : ""}
                       </small>
-                      <p style={{ fontSize: 11, color: "#6b7280", margin: 0, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
+                      <p style={{ fontSize: 12, color: "#6b7280", margin: 0, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
                         {event.description}
                       </p>
                     </div>
