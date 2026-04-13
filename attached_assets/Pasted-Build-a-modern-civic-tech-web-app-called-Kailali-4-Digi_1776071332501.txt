@@ -1,0 +1,94 @@
+Build a modern civic-tech web app called "Kailali-4 Digital MP Office System" using HTML, CSS, and JavaScript (no frameworks).
+
+The app must include a fully advanced Admin Panel and dynamic public pages.
+
+-------------------------
+🔐 ADMIN PANEL FEATURES
+-------------------------
+Create an Admin Control Panel where admin can:
+
+1. Update MP Profile:
+   - MP Name
+   - Message
+   - Upload Photo (convert to Base64 and store in localStorage)
+   - Display updated profile on all pages
+
+2. Manage Social Links:
+   - Facebook
+   - YouTube
+   - Website
+   - Save in localStorage
+   - Auto display on About page
+
+3. Dashboard Control:
+   - Toggle visibility of sections:
+     - Home
+     - Team
+     - Complaints
+     - Analytics
+
+4. Theme System:
+   - 5 themes: Blue, Red, Green, Black, Purple
+   - Save selected theme in localStorage
+   - Apply on reload
+
+5. Data Control:
+   - View team data (console log)
+   - Delete all team members
+   - View complaints
+   - Delete all complaints
+
+6. Analytics:
+   - Show total team count
+   - Show total complaints count
+
+-------------------------
+🏠 PUBLIC WEBSITE FEATURES
+-------------------------
+
+1. Home Page:
+   - MP profile section (photo + name + message)
+   - Dynamic content from admin
+
+2. About Page:
+   - Description of MP Office
+   - MP profile (auto load from localStorage)
+   - Social media links (dynamic)
+
+3. Team Section:
+   - Show list of members
+   - Include name, phone, palika, ward, rank, photo
+
+4. Complaint Section:
+   - Submit form
+   - Store complaints locally
+
+-------------------------
+📁 FILE STRUCTURE
+-------------------------
+
+- index.html (Home)
+- about.html
+- admin.html
+- style.css
+- script.js
+- admin.js
+
+-------------------------
+⚙️ TECH REQUIREMENTS
+-------------------------
+
+- Use localStorage for saving data
+- Use FileReader for image Base64 conversion
+- Use clean modern UI (mobile responsive)
+- Use card-based design
+- Use simple JavaScript (no frameworks)
+
+-------------------------
+🎯 FINAL OUTPUT
+-------------------------
+
+- Fully working multi-page app
+- Admin changes reflect instantly
+- All data persists using localStorage
+- Clean UI with modern layout
