@@ -21,19 +21,19 @@ import { cn } from "@/lib/utils";
 
 const CREDS_KEY = "k4-admin-creds";
 
-function getCredentials(): { admin: string; staff: string } {
+function getCredentials(): { admin: string; coord: string; leader: string } {
   try {
     const raw = localStorage.getItem(CREDS_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { admin: "1234", staff: "1111" };
+  return { admin: "1234", coord: "1111", leader: "2222" };
 }
 
-function saveCredentials(creds: { admin: string; staff: string }) {
+function saveCredentials(creds: { admin: string; coord: string; leader: string }) {
   localStorage.setItem(CREDS_KEY, JSON.stringify(creds));
 }
 
-type AdminRole = "super_admin" | "staff";
+type AdminRole = "super_admin" | "coordinator" | "leader";
 type TabKey = "analytics" | "complaints" | "team" | "applications" | "home" | "theme" | "profile";
 
 const THEMES = [
@@ -137,7 +137,7 @@ function LoginGate({ onUnlock }: { onUnlock: (role: AdminRole) => void }) {
                 type="text"
                 value={username}
                 onChange={e => { setUsername(e.target.value); setError(""); }}
-                placeholder={language === "NP" ? "admin वा staff" : "admin or staff"}
+                placeholder={language === "NP" ? "admin, coord वा leader" : "admin, coord or leader"}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 autoComplete="username"
                 required
@@ -189,14 +189,18 @@ function LoginGate({ onUnlock }: { onUnlock: (role: AdminRole) => void }) {
           <p className="text-xs text-muted-foreground text-center font-medium">
             {language === "NP" ? "डिफल्ट खाताहरू" : "Default Accounts"}
           </p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+          <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
             <div className="bg-muted rounded-lg p-2 text-center">
               <p className="font-semibold text-foreground">admin</p>
               <p>{language === "NP" ? "सुपर एडमिन" : "Super Admin"}</p>
             </div>
             <div className="bg-muted rounded-lg p-2 text-center">
-              <p className="font-semibold text-foreground">staff</p>
-              <p>{language === "NP" ? "स्टाफ" : "Staff"}</p>
+              <p className="font-semibold text-foreground">coord</p>
+              <p>{language === "NP" ? "समन्वयकर्ता" : "Coordinator"}</p>
+            </div>
+            <div className="bg-muted rounded-lg p-2 text-center">
+              <p className="font-semibold text-foreground">leader</p>
+              <p>{language === "NP" ? "नेता" : "Leader"}</p>
             </div>
           </div>
         </div>
@@ -749,16 +753,19 @@ function HomeContentTab() {
 function ChangePasswordSection() {
   const { language } = useI18n();
 
-  const [adminPw, setAdminPw]   = useState({ current: "", next: "", confirm: "" });
-  const [staffPw, setStaffPw]   = useState({ current: "", next: "", confirm: "" });
-  const [adminMsg, setAdminMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [staffMsg, setStaffMsg] = useState<{ ok: boolean; text: string } | null>(null);
-
-  const [showAdminPw, setShowAdminPw] = useState(false);
-  const [showStaffPw, setShowStaffPw] = useState(false);
+  const emptyPw = () => ({ current: "", next: "", confirm: "" });
+  const [adminPw,  setAdminPw]  = useState(emptyPw);
+  const [coordPw,  setCoordPw]  = useState(emptyPw);
+  const [leaderPw, setLeaderPw] = useState(emptyPw);
+  const [adminMsg,  setAdminMsg]  = useState<{ ok: boolean; text: string } | null>(null);
+  const [coordMsg,  setCoordMsg]  = useState<{ ok: boolean; text: string } | null>(null);
+  const [leaderMsg, setLeaderMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [showAdminPw,  setShowAdminPw]  = useState(false);
+  const [showCoordPw,  setShowCoordPw]  = useState(false);
+  const [showLeaderPw, setShowLeaderPw] = useState(false);
 
   const handleChange = async (
-    who: "admin" | "staff",
+    who: "admin" | "coord" | "leader",
     form: { current: string; next: string; confirm: string },
     setMsg: (m: { ok: boolean; text: string } | null) => void,
     setForm: (f: { current: string; next: string; confirm: string }) => void
@@ -779,10 +786,7 @@ function ChangePasswordSection() {
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}api/admin/change-password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Token": adminToken,
-        },
+        headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
         body: JSON.stringify({ account: who, currentPassword: form.current, newPassword: form.next }),
       });
       const data = await res.json();
@@ -790,9 +794,8 @@ function ChangePasswordSection() {
         setMsg({ ok: false, text: data.error ?? t("Failed to change password.", "पासवर्ड परिवर्तन भएन।") }); return;
       }
       const creds = getCredentials();
-      const updated = who === "admin" ? { ...creds, admin: form.next } : { ...creds, staff: form.next };
-      saveCredentials(updated);
-      setForm({ current: "", next: "", confirm: "" });
+      saveCredentials({ ...creds, [who]: form.next });
+      setForm(emptyPw());
       setMsg({ ok: true, text: t("Password changed successfully!", "पासवर्ड सफलतापूर्वक परिवर्तन भयो!") });
       setTimeout(() => setMsg(null), 3000);
     } catch {
@@ -849,11 +852,11 @@ function ChangePasswordSection() {
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
           {language === "NP"
-            ? "admin र staff दुवैको पासवर्ड यहाँबाट परिवर्तन गर्न सकिन्छ।"
-            : "Super Admin can update both admin and staff login passwords here."}
+            ? "सुपर एडमिनले तीनवटै खाताको पासवर्ड यहाँबाट परिवर्तन गर्न सकिन्छ।"
+            : "Super Admin can update passwords for all three accounts here."}
         </p>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <PwFields
               form={adminPw} setForm={setAdminPw}
@@ -870,14 +873,28 @@ function ChangePasswordSection() {
 
           <div className="space-y-2">
             <PwFields
-              form={staffPw} setForm={setStaffPw}
-              show={showStaffPw} setShow={setShowStaffPw}
-              label={language === "NP" ? "Staff पासवर्ड" : "Staff Password"}
-              onSubmit={() => handleChange("staff", staffPw, setStaffMsg, setStaffPw)}
+              form={coordPw} setForm={setCoordPw}
+              show={showCoordPw} setShow={setShowCoordPw}
+              label={language === "NP" ? "Coordinator पासवर्ड" : "Coordinator Password"}
+              onSubmit={() => handleChange("coord", coordPw, setCoordMsg, setCoordPw)}
             />
-            {staffMsg && (
-              <p className={cn("text-xs flex items-center gap-1.5", staffMsg.ok ? "text-green-600" : "text-red-500")}>
-                {staffMsg.ok ? <Check size={11} /> : <X size={11} />} {staffMsg.text}
+            {coordMsg && (
+              <p className={cn("text-xs flex items-center gap-1.5", coordMsg.ok ? "text-green-600" : "text-red-500")}>
+                {coordMsg.ok ? <Check size={11} /> : <X size={11} />} {coordMsg.text}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <PwFields
+              form={leaderPw} setForm={setLeaderPw}
+              show={showLeaderPw} setShow={setShowLeaderPw}
+              label={language === "NP" ? "Leader पासवर्ड" : "Leader Password"}
+              onSubmit={() => handleChange("leader", leaderPw, setLeaderMsg, setLeaderPw)}
+            />
+            {leaderMsg && (
+              <p className={cn("text-xs flex items-center gap-1.5", leaderMsg.ok ? "text-green-600" : "text-red-500")}>
+                {leaderMsg.ok ? <Check size={11} /> : <X size={11} />} {leaderMsg.text}
               </p>
             )}
           </div>
@@ -1049,14 +1066,18 @@ export default function Admin() {
 
   if (!unlocked || !role) return <LoginGate onUnlock={handleUnlock} />;
 
-  const isSuperAdmin = role === "super_admin";
+  const isSuperAdmin  = role === "super_admin";
+  const isCoordinator = role === "coordinator";
+  const isLeader      = role === "leader";
 
   const TABS: { key: TabKey; label: string; labelNp: string; icon: React.ComponentType<{ size?: number }> }[] = [
     { key: "analytics",  label: "Analytics",  labelNp: "विश्लेषण",    icon: BarChart2 },
     { key: "complaints", label: "Complaints", labelNp: "उजुरीहरू",    icon: FileText },
-    ...(isSuperAdmin ? [
+    ...(!isLeader ? [
       { key: "team" as TabKey,         label: "Team",         labelNp: "टोली",         icon: Users },
       { key: "applications" as TabKey, label: "Applications", labelNp: "आवेदनहरू",    icon: UserCheck },
+    ] : []),
+    ...(isSuperAdmin ? [
       { key: "home" as TabKey,         label: "Home",         labelNp: "होम",          icon: Home },
       { key: "theme" as TabKey,        label: "Theme",        labelNp: "थिम",          icon: Palette },
       { key: "profile" as TabKey,      label: "MP Profile",   labelNp: "सांसद",        icon: User },
@@ -1080,7 +1101,9 @@ export default function Admin() {
             <div className="flex items-center gap-1.5 mt-0.5">
               {isSuperAdmin
                 ? <><Shield size={11} className="text-primary" /><span className="text-xs text-primary font-medium">{language === "NP" ? "सुपर एडमिन" : "Super Admin"}</span></>
-                : <><UserCheck size={11} className="text-muted-foreground" /><span className="text-xs text-muted-foreground font-medium">{language === "NP" ? "स्टाफ" : "Staff"}</span></>
+                : isCoordinator
+                ? <><UserCheck size={11} className="text-blue-500" /><span className="text-xs text-blue-500 font-medium">{language === "NP" ? "समन्वयकर्ता" : "Coordinator"}</span></>
+                : <><Users size={11} className="text-orange-500" /><span className="text-xs text-orange-500 font-medium">{language === "NP" ? "नेता" : "Leader"}</span></>
               }
             </div>
           </div>
@@ -1091,13 +1114,21 @@ export default function Admin() {
         </button>
       </div>
 
-      {/* Staff notice */}
-      {!isSuperAdmin && (
-        <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+      {/* Role notice */}
+      {isCoordinator && (
+        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
           <AlertTriangle size={15} />
           {language === "NP"
-            ? "स्टाफ पहुँच: उजुरी स्थिति परिवर्तन गर्न सक्नुहुन्छ। पूर्ण नियन्त्रणको लागि सुपर एडमिनको रूपमा लग इन गर्नुहोस्।"
-            : "Staff access: You can update complaint statuses. Log in as Super Admin for full control."}
+            ? "समन्वयकर्ता पहुँच: उजुरी, टोली र आवेदन व्यवस्थापन गर्न सक्नुहुन्छ। मेटाउने र सेटिङका लागि सुपर एडमिन चाहिन्छ।"
+            : "Coordinator access: Manage complaints, team and applications. Deletes and settings require Super Admin."}
+        </div>
+      )}
+      {isLeader && (
+        <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-xl text-sm text-orange-700">
+          <AlertTriangle size={15} />
+          {language === "NP"
+            ? "नेता पहुँच: उजुरी हेर्न र स्थिति परिवर्तन गर्न सक्नुहुन्छ। अरू कार्यका लागि उच्च पहुँच चाहिन्छ।"
+            : "Leader access: View and update complaint statuses. Higher access required for other actions."}
         </div>
       )}
 
@@ -1134,8 +1165,8 @@ export default function Admin() {
         >
           {safeTab === "analytics"    && <AnalyticsTab />}
           {safeTab === "complaints"   && <ComplaintsTab role={role} />}
-          {safeTab === "team"         && isSuperAdmin && <TeamTab />}
-          {safeTab === "applications" && isSuperAdmin && <ApplicationsTab />}
+          {safeTab === "team"         && !isLeader && <TeamTab />}
+          {safeTab === "applications" && !isLeader && <ApplicationsTab />}
           {safeTab === "home"         && isSuperAdmin && <HomeContentTab />}
 
           {safeTab === "theme" && isSuperAdmin && (
