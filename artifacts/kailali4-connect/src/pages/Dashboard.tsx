@@ -5,6 +5,7 @@ import {
   useGetWardBreakdown,
   useGetRecentActivity,
   useGetMpProfile,
+  useListEvents,
 } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -17,7 +18,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar, ShieldAlert } from "lucide-react";
+import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar, ShieldAlert, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
@@ -212,13 +213,24 @@ function StatCard({ label, value, icon: Icon, colorClass }: { label: string; val
   );
 }
 
+const EVENT_TYPE_LABELS: Record<string, { en: string; np: string; color: string }> = {
+  festival:           { en: "Festival",           np: "महोत्सव",               color: "#b45309" },
+  government_program: { en: "Government Program", np: "सरकारी कार्यक्रम",     color: "#1d4ed8" },
+  development_update: { en: "Development Update", np: "विकास अद्यावधिक",      color: "#c2410c" },
+  cultural_program:   { en: "Cultural Program",   np: "सांस्कृतिक कार्यक्रम", color: "#7c3aed" },
+  public_notice:      { en: "Public Notice",      np: "सार्वजनिक सूचना",      color: "#b91c1c" },
+};
+
 export default function Dashboard() {
   const { t, language } = useI18n();
   const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
   const { data: wardBreakdown, isLoading: wardLoading } = useGetWardBreakdown();
   const { data: activity, isLoading: activityLoading } = useGetRecentActivity();
   const { data: mpProfile } = useGetMpProfile();
+  const { data: allEvents = [], isLoading: eventsLoading } = useListEvents();
   const [mpPhotoErr, setMpPhotoErr] = useState(false);
+
+  const latestEvents = [...allEvents].reverse().slice(0, 3);
 
   const wardChartData = wardBreakdown?.map((w) => ({
     name: `${t("dashboard.ward")} ${w.ward}`,
@@ -345,6 +357,80 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Latest Events */}
+      {(eventsLoading || latestEvents.length > 0) && (
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <CalendarDays size={17} className="text-primary" />
+              {language === "NP" ? "ताजा कार्यक्रमहरू" : "Latest Events"}
+            </h3>
+            <Link href="/events">
+              <button className="flex items-center gap-1 text-xs text-primary font-medium hover:underline">
+                {language === "NP" ? "सबै हेर्नुस्" : "View all"}
+                <ArrowRight size={12} />
+              </button>
+            </Link>
+          </div>
+
+          {eventsLoading ? (
+            <div className="flex gap-4 overflow-x-auto pb-1">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse bg-muted rounded-xl flex-shrink-0"
+                  style={{ width: 220, aspectRatio: "4/5" }} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-4 flex-wrap">
+              {latestEvents.map((event, idx) => {
+                const type = EVENT_TYPE_LABELS[event.eventType] ?? EVENT_TYPE_LABELS.public_notice;
+                return (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.07 }}
+                    style={{
+                      width: "100%",
+                      maxWidth: 240,
+                      aspectRatio: "4/5",
+                      background: "white",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      boxShadow: "0 2px 10px rgba(0,0,0,0.10)",
+                      display: "flex",
+                      flexDirection: "column",
+                      border: "1px solid hsl(var(--border))",
+                    }}
+                  >
+                    <div style={{ height: "65%", width: "100%", flexShrink: 0, overflow: "hidden", background: "#f3f4f6" }}>
+                      {event.imageUrl ? (
+                        <img src={event.imageUrl} alt={event.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <CalendarDays size={32} color="#d1d5db" />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: 10, flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3 }}>
+                      <b style={{ fontSize: 13, lineHeight: 1.3, display: "block" }}>{event.title}</b>
+                      <small style={{ color: type.color, fontWeight: 600, fontSize: 10 }}>
+                        {language === "NP" ? type.np : type.en}
+                        {event.eventDate ? ` · ${event.eventDate}` : ""}
+                      </small>
+                      <p style={{ fontSize: 11, color: "#6b7280", margin: 0, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
+                        {event.description}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
