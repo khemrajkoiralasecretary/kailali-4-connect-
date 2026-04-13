@@ -13,6 +13,7 @@ export const complaintsTable = pgTable("complaints", {
   category: text("category").notNull(),
   description: text("description").notNull(),
   status: complaintStatusEnum("status").notNull().default("pending"),
+  citizenId: integer("citizen_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -18,25 +18,34 @@ import type {
 
 import type {
   ActivityItem,
+  CitizenAuthResponse,
+  CitizenLoginBody,
+  CitizenProfile,
+  CitizenSignupBody,
   Complaint,
   CreateComplaintBody,
   CreateIdeaBody,
   CreateNewsBody,
+  CreateTeamApplicationBody,
   DashboardStats,
   DeleteAllResult,
   EditTeamMemberBody,
+  ErrorResponse,
   HealthStatus,
   HomeContent,
   Idea,
   JoinTeamBody,
   ListComplaintsParams,
+  ListTeamApplicationsParams,
   ListTeamMembersParams,
   MpProfile,
   NewsItem,
   SocialLinks,
+  TeamApplication,
   TeamMember,
   UpdateComplaintStatusBody,
   UpdateRankBody,
+  UpdateTeamApplicationStatusBody,
   WardStat,
 } from "./api.schemas";
 
@@ -2256,3 +2265,684 @@ export function useGetRecentActivity<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Register a new citizen account
+ */
+export const getCitizenSignupUrl = () => {
+  return `/api/citizens/signup`;
+};
+
+export const citizenSignup = async (
+  citizenSignupBody: CitizenSignupBody,
+  options?: RequestInit,
+): Promise<CitizenAuthResponse> => {
+  return customFetch<CitizenAuthResponse>(getCitizenSignupUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(citizenSignupBody),
+  });
+};
+
+export const getCitizenSignupMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof citizenSignup>>,
+    TError,
+    { data: BodyType<CitizenSignupBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof citizenSignup>>,
+  TError,
+  { data: BodyType<CitizenSignupBody> },
+  TContext
+> => {
+  const mutationKey = ["citizenSignup"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof citizenSignup>>,
+    { data: BodyType<CitizenSignupBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return citizenSignup(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CitizenSignupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof citizenSignup>>
+>;
+export type CitizenSignupMutationBody = BodyType<CitizenSignupBody>;
+export type CitizenSignupMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Register a new citizen account
+ */
+export const useCitizenSignup = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof citizenSignup>>,
+    TError,
+    { data: BodyType<CitizenSignupBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof citizenSignup>>,
+  TError,
+  { data: BodyType<CitizenSignupBody> },
+  TContext
+> => {
+  return useMutation(getCitizenSignupMutationOptions(options));
+};
+
+/**
+ * @summary Login as a citizen
+ */
+export const getCitizenLoginUrl = () => {
+  return `/api/citizens/login`;
+};
+
+export const citizenLogin = async (
+  citizenLoginBody: CitizenLoginBody,
+  options?: RequestInit,
+): Promise<CitizenAuthResponse> => {
+  return customFetch<CitizenAuthResponse>(getCitizenLoginUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(citizenLoginBody),
+  });
+};
+
+export const getCitizenLoginMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof citizenLogin>>,
+    TError,
+    { data: BodyType<CitizenLoginBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof citizenLogin>>,
+  TError,
+  { data: BodyType<CitizenLoginBody> },
+  TContext
+> => {
+  const mutationKey = ["citizenLogin"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof citizenLogin>>,
+    { data: BodyType<CitizenLoginBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return citizenLogin(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CitizenLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof citizenLogin>>
+>;
+export type CitizenLoginMutationBody = BodyType<CitizenLoginBody>;
+export type CitizenLoginMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Login as a citizen
+ */
+export const useCitizenLogin = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof citizenLogin>>,
+    TError,
+    { data: BodyType<CitizenLoginBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof citizenLogin>>,
+  TError,
+  { data: BodyType<CitizenLoginBody> },
+  TContext
+> => {
+  return useMutation(getCitizenLoginMutationOptions(options));
+};
+
+/**
+ * @summary Get current citizen profile (requires Bearer token)
+ */
+export const getGetCitizenMeUrl = () => {
+  return `/api/citizens/me`;
+};
+
+export const getCitizenMe = async (
+  options?: RequestInit,
+): Promise<CitizenProfile> => {
+  return customFetch<CitizenProfile>(getGetCitizenMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCitizenMeQueryKey = () => {
+  return [`/api/citizens/me`] as const;
+};
+
+export const getGetCitizenMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCitizenMe>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCitizenMe>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCitizenMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCitizenMe>>> = ({
+    signal,
+  }) => getCitizenMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCitizenMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCitizenMeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCitizenMe>>
+>;
+export type GetCitizenMeQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get current citizen profile (requires Bearer token)
+ */
+
+export function useGetCitizenMe<
+  TData = Awaited<ReturnType<typeof getCitizenMe>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCitizenMe>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCitizenMeQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get complaints submitted by the logged-in citizen
+ */
+export const getGetCitizenComplaintsUrl = () => {
+  return `/api/citizens/complaints`;
+};
+
+export const getCitizenComplaints = async (
+  options?: RequestInit,
+): Promise<Complaint[]> => {
+  return customFetch<Complaint[]>(getGetCitizenComplaintsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCitizenComplaintsQueryKey = () => {
+  return [`/api/citizens/complaints`] as const;
+};
+
+export const getGetCitizenComplaintsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCitizenComplaints>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCitizenComplaints>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCitizenComplaintsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCitizenComplaints>>
+  > = ({ signal }) => getCitizenComplaints({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCitizenComplaints>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCitizenComplaintsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCitizenComplaints>>
+>;
+export type GetCitizenComplaintsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get complaints submitted by the logged-in citizen
+ */
+
+export function useGetCitizenComplaints<
+  TData = Awaited<ReturnType<typeof getCitizenComplaints>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCitizenComplaints>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCitizenComplaintsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List team applications (admin) or own application (citizen)
+ */
+export const getListTeamApplicationsUrl = (
+  params?: ListTeamApplicationsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/team-applications?${stringifiedParams}`
+    : `/api/team-applications`;
+};
+
+export const listTeamApplications = async (
+  params?: ListTeamApplicationsParams,
+  options?: RequestInit,
+): Promise<TeamApplication[]> => {
+  return customFetch<TeamApplication[]>(getListTeamApplicationsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTeamApplicationsQueryKey = (
+  params?: ListTeamApplicationsParams,
+) => {
+  return [`/api/team-applications`, ...(params ? [params] : [])] as const;
+};
+
+export const getListTeamApplicationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTeamApplications>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListTeamApplicationsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTeamApplications>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListTeamApplicationsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listTeamApplications>>
+  > = ({ signal }) =>
+    listTeamApplications(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTeamApplications>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListTeamApplicationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTeamApplications>>
+>;
+export type ListTeamApplicationsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List team applications (admin) or own application (citizen)
+ */
+
+export function useListTeamApplications<
+  TData = Awaited<ReturnType<typeof listTeamApplications>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListTeamApplicationsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTeamApplications>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListTeamApplicationsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Submit a team membership application
+ */
+export const getCreateTeamApplicationUrl = () => {
+  return `/api/team-applications`;
+};
+
+export const createTeamApplication = async (
+  createTeamApplicationBody: CreateTeamApplicationBody,
+  options?: RequestInit,
+): Promise<TeamApplication> => {
+  return customFetch<TeamApplication>(getCreateTeamApplicationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createTeamApplicationBody),
+  });
+};
+
+export const getCreateTeamApplicationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createTeamApplication>>,
+    TError,
+    { data: BodyType<CreateTeamApplicationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createTeamApplication>>,
+  TError,
+  { data: BodyType<CreateTeamApplicationBody> },
+  TContext
+> => {
+  const mutationKey = ["createTeamApplication"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createTeamApplication>>,
+    { data: BodyType<CreateTeamApplicationBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createTeamApplication(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateTeamApplicationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createTeamApplication>>
+>;
+export type CreateTeamApplicationMutationBody =
+  BodyType<CreateTeamApplicationBody>;
+export type CreateTeamApplicationMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Submit a team membership application
+ */
+export const useCreateTeamApplication = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createTeamApplication>>,
+    TError,
+    { data: BodyType<CreateTeamApplicationBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createTeamApplication>>,
+  TError,
+  { data: BodyType<CreateTeamApplicationBody> },
+  TContext
+> => {
+  return useMutation(getCreateTeamApplicationMutationOptions(options));
+};
+
+/**
+ * @summary Approve or reject a team application (admin only)
+ */
+export const getUpdateTeamApplicationStatusUrl = (id: number) => {
+  return `/api/team-applications/${id}`;
+};
+
+export const updateTeamApplicationStatus = async (
+  id: number,
+  updateTeamApplicationStatusBody: UpdateTeamApplicationStatusBody,
+  options?: RequestInit,
+): Promise<TeamApplication> => {
+  return customFetch<TeamApplication>(getUpdateTeamApplicationStatusUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateTeamApplicationStatusBody),
+  });
+};
+
+export const getUpdateTeamApplicationStatusMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTeamApplicationStatus>>,
+    TError,
+    { id: number; data: BodyType<UpdateTeamApplicationStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTeamApplicationStatus>>,
+  TError,
+  { id: number; data: BodyType<UpdateTeamApplicationStatusBody> },
+  TContext
+> => {
+  const mutationKey = ["updateTeamApplicationStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTeamApplicationStatus>>,
+    { id: number; data: BodyType<UpdateTeamApplicationStatusBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateTeamApplicationStatus(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTeamApplicationStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateTeamApplicationStatus>>
+>;
+export type UpdateTeamApplicationStatusMutationBody =
+  BodyType<UpdateTeamApplicationStatusBody>;
+export type UpdateTeamApplicationStatusMutationError = ErrorType<void>;
+
+/**
+ * @summary Approve or reject a team application (admin only)
+ */
+export const useUpdateTeamApplicationStatus = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTeamApplicationStatus>>,
+    TError,
+    { id: number; data: BodyType<UpdateTeamApplicationStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateTeamApplicationStatus>>,
+  TError,
+  { id: number; data: BodyType<UpdateTeamApplicationStatusBody> },
+  TContext
+> => {
+  return useMutation(getUpdateTeamApplicationStatusMutationOptions(options));
+};
+
+/**
+ * @summary Delete a team application (admin only)
+ */
+export const getDeleteTeamApplicationUrl = (id: number) => {
+  return `/api/team-applications/${id}`;
+};
+
+export const deleteTeamApplication = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteAllResult> => {
+  return customFetch<DeleteAllResult>(getDeleteTeamApplicationUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteTeamApplicationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTeamApplication>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteTeamApplication>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteTeamApplication"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteTeamApplication>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteTeamApplication(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteTeamApplicationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteTeamApplication>>
+>;
+
+export type DeleteTeamApplicationMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a team application (admin only)
+ */
+export const useDeleteTeamApplication = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTeamApplication>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteTeamApplication>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteTeamApplicationMutationOptions(options));
+};

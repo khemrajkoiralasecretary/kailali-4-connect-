@@ -1,10 +1,15 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
-import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, ShieldCheck, Menu, X, Facebook, Youtube, Globe, Info } from "lucide-react";
+import { useCitizenAuth } from "@/lib/citizenAuth";
+import {
+  LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users,
+  ShieldCheck, Menu, X, Facebook, Youtube, Globe, Info, UserCircle, LogOut,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useGetSocialLinks } from "@workspace/api-client-react";
+import CitizenAuthModal from "@/components/CitizenAuthModal";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,7 +19,9 @@ export default function Layout({ children }: LayoutProps) {
   const { t, language, setLanguage } = useI18n();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const { data: socialLinks } = useGetSocialLinks();
+  const { citizen, clearCitizenSession } = useCitizenAuth();
 
   const navItems = [
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboard },
@@ -81,6 +88,34 @@ export default function Layout({ children }: LayoutProps) {
               >
                 {language === "EN" ? "ने" : "EN"}
               </button>
+
+              {/* Citizen Auth Button */}
+              {citizen ? (
+                <div className="flex items-center gap-1.5">
+                  <Link href="/citizen"
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-white/30",
+                      isActive("/citizen") ? "bg-white/30" : "bg-white/15 hover:bg-white/25"
+                    )}>
+                    <UserCircle size={14} />
+                    <span className="hidden sm:inline max-w-[80px] truncate">{citizen.name.split(" ")[0]}</span>
+                  </Link>
+                  <button onClick={clearCitizenSession}
+                    title="Logout"
+                    className="w-7 h-7 bg-white/15 hover:bg-white/25 rounded-full flex items-center justify-center transition-colors border border-white/20">
+                    <LogOut size={13} />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setAuthOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-white/15 hover:bg-white/25 transition-colors border border-white/30">
+                  <UserCircle size={14} />
+                  <span className="hidden sm:inline">
+                    {language === "NP" ? "लगइन" : "Login"}
+                  </span>
+                </button>
+              )}
+
               <Link href="/admin" title="Admin">
                 <div className="w-8 h-8 bg-white/20 hover:bg-white/30 transition-colors rounded-full flex items-center justify-center cursor-pointer">
                   <ShieldCheck size={15} />
@@ -118,6 +153,29 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               );
             })}
+            {/* Mobile citizen link */}
+            {citizen ? (
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <Link href="/citizen" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium hover:bg-white/10">
+                  <UserCircle size={18} />
+                  {citizen.name}
+                </Link>
+                <button onClick={() => { clearCitizenSession(); setMobileOpen(false); }}
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium hover:bg-white/10 w-full text-left">
+                  <LogOut size={18} />
+                  {language === "NP" ? "लगआउट" : "Logout"}
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <button onClick={() => { setAuthOpen(true); setMobileOpen(false); }}
+                  className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium hover:bg-white/10 w-full text-left">
+                  <UserCircle size={18} />
+                  {language === "NP" ? "नागरिक लगइन" : "Citizen Login"}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -140,37 +198,22 @@ export default function Layout({ children }: LayoutProps) {
           {(socialLinks?.facebook || socialLinks?.youtube || socialLinks?.website) && (
             <div className="flex items-center gap-3">
               {socialLinks.facebook && (
-                <a
-                  href={socialLinks.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Facebook"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-200"
-                >
+                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" title="Facebook"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-200">
                   <Facebook size={13} />
                   <span className="font-medium">Facebook</span>
                 </a>
               )}
               {socialLinks.youtube && (
-                <a
-                  href={socialLinks.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="YouTube"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-200"
-                >
+                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" title="YouTube"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-200">
                   <Youtube size={13} />
                   <span className="font-medium">YouTube</span>
                 </a>
               )}
               {socialLinks.website && (
-                <a
-                  href={socialLinks.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Website"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors border border-green-200"
-                >
+                <a href={socialLinks.website} target="_blank" rel="noopener noreferrer" title="Website"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors border border-green-200">
                   <Globe size={13} />
                   <span className="font-medium">Website</span>
                 </a>
@@ -179,6 +222,8 @@ export default function Layout({ children }: LayoutProps) {
           )}
         </div>
       </footer>
+
+      {authOpen && <CitizenAuthModal onClose={() => setAuthOpen(false)} />}
     </div>
   );
 }

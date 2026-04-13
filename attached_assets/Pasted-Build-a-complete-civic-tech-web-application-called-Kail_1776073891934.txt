@@ -1,0 +1,160 @@
+Build a complete civic-tech web application called “Kailali-4 Digital MP Office System” using HTML, CSS, and JavaScript (no frameworks).
+
+IMPORTANT:
+Build step by step and generate all files separately.
+Use localStorage for data storage (Firebase optional if possible).
+
+----------------------------------
+🎯 ROLE-BASED FULL SYSTEM
+----------------------------------
+
+Create 3 USER ROLES:
+
+1. 👑 SUPER ADMIN
+- Full control of everything
+- Manage MP profile (name, message, photo using Base64)
+- Manage team (approve, edit, delete, rank)
+- Manage complaints (view, assign, update status, delete)
+- Manage citizen accounts
+- Control dashboard sections (home/team/complaints/analytics ON/OFF)
+- Change theme (5 colors: blue, red, green, black, purple)
+- View analytics (total users, complaints, team members, ward/palika breakdown)
+
+2. 👨‍💼 STAFF
+- Can ONLY manage complaints
+- Can view complaints
+- Can filter complaints by:
+  - Palika (Godawari, Gauriganga, Chure, Mohanyal)
+  - Ward (dynamic per palika)
+- Can update complaint status:
+  - Pending
+  - In Progress
+  - Solved
+- Cannot delete complaints
+- Cannot access admin settings or team system
+
+3. 🧑 CITIZEN (PUBLIC USER)
+- Must sign up and login
+- Can ONLY:
+  - Submit complaints
+  - Submit ideas/suggestions
+  - Apply for team membership
+  - View MP profile and public information
+- Cannot access admin or staff dashboard
+- Can track their own submitted complaints
+- Can see public announcements only
+
+----------------------------------
+🔐 AUTH SYSTEM (LOGIN + SIGNUP)
+----------------------------------
+
+- Create signup system for citizens:
+  - name, phone, email, password, ward, palika
+- Login system for all roles:
+  - admin
+  - staff
+  - citizen
+- Role-based redirect after login:
+  - admin.html → Super Admin Panel
+  - staff.html → Staff Panel
+  - citizen.html → Citizen Dashboard
+
+----------------------------------
+🧾 COMPLAINT SYSTEM (IMPORTANT)
+----------------------------------
+
+- Citizens can submit complaints:
+  - Name
+  - Phone
+  - Palika
+  - Ward
+  - Category
+  - Description
+  - Photo upload (Base64)
+- Complaints stored in localStorage
+- Only ADMIN and STAFF can:
+  - View all complaints
+  - Update status
+  - Filter by ward/palika
+- Citizens can only:
+  - View their own complaints status
+
+----------------------------------
+👥 TEAM SYSTEM
+----------------------------------
+
+- Citizens can apply for team:
+  - Name
+  - Ward
+  - Palika
+  - Skills
+  - Photo
+- Admin can approve/reject applications
+- Approved users become TEAM members
+
+----------------------------------
+🏠 PUBLIC FEATURES
+----------------------------------
+
+- Home page:
+  - MP profile (dynamic)
+  - announcements
+- About page:
+  - MP info + social links
+- Team page:
+  - Show approved team members only
+
+----------------------------------
+📊 ANALYTICS
+----------------------------------
+
+Super admin dashboard must show:
+- Total citizens
+- Total complaints
+- Total team members
+- Palika-wise data
+- Ward-wise data
+- Complaint status distribution
+
+----------------------------------
+📁 FILE STRUCTURE
+----------------------------------
+
+- index.html (Login)
+- signup.html (Citizen registration)
+- admin.html (Super Admin dashboard)
+- staff.html (Staff dashboard)
+- citizen.html (Citizen dashboard)
+- about.html
+- team.html
+- complaints.html
+- ideas.html
+- style.css
+- script.js
+- auth.js
+- admin.js
+- staff.js
+- citizen.js
+
+----------------------------------
+⚙️ TECH REQUIREMENTS
+----------------------------------
+
+- Use localStorage for all data
+- Use FileReader for image upload (Base64)
+- Fully mobile responsive UI
+- Clean modern dashboard UI
+- Role-based authentication system
+- Secure route protection (block unauthorized access)
+
+----------------------------------
+🎯 FINAL OUTPUT
+----------------------------------
+
+- Fully working multi-role civic app
+- Citizen signup + login system
+- Admin full control system
+- Staff limited complaint system
+- Citizen limited access system
+- Clean UI with modern design
+- Replit-ready project

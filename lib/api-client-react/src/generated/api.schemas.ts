@@ -28,6 +28,7 @@ export interface Complaint {
   description: string;
   status: ComplaintStatus;
   createdAt: string;
+  citizenId?: number | null;
   updatedAt: string;
 }
 
@@ -196,6 +197,83 @@ export interface ActivityItem {
   timestamp: string;
 }
 
+export interface CitizenSignupBody {
+  name: string;
+  phone: string;
+  email: string;
+  password: string;
+  ward: number;
+  palika: string;
+}
+
+export interface CitizenLoginBody {
+  email: string;
+  password: string;
+}
+
+export interface CitizenProfile {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  ward: number;
+  palika: string;
+  createdAt: string;
+}
+
+export interface CitizenAuthResponse {
+  token: string;
+  citizen: CitizenProfile;
+}
+
+export type TeamApplicationStatus =
+  (typeof TeamApplicationStatus)[keyof typeof TeamApplicationStatus];
+
+export const TeamApplicationStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
+export interface TeamApplication {
+  id: number;
+  name: string;
+  phone: string;
+  ward: number;
+  palika: string;
+  skills: string;
+  message?: string | null;
+  citizenId?: number | null;
+  status: TeamApplicationStatus;
+  createdAt: string;
+}
+
+export interface CreateTeamApplicationBody {
+  name: string;
+  phone: string;
+  ward: number;
+  palika: string;
+  skills: string;
+  message?: string;
+}
+
+export type UpdateTeamApplicationStatusBodyStatus =
+  (typeof UpdateTeamApplicationStatusBodyStatus)[keyof typeof UpdateTeamApplicationStatusBodyStatus];
+
+export const UpdateTeamApplicationStatusBodyStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
+export interface UpdateTeamApplicationStatusBody {
+  status: UpdateTeamApplicationStatusBodyStatus;
+}
+
+export interface ErrorResponse {
+  error: string;
+}
+
 export type ListComplaintsParams = {
   status?: ListComplaintsStatus;
   ward?: number;
@@ -222,4 +300,17 @@ export const ListTeamMembersRank = {
   volunteer: "volunteer",
   coordinator: "coordinator",
   leader: "leader",
+} as const;
+
+export type ListTeamApplicationsParams = {
+  status?: ListTeamApplicationsStatus;
+};
+
+export type ListTeamApplicationsStatus =
+  (typeof ListTeamApplicationsStatus)[keyof typeof ListTeamApplicationsStatus];
+
+export const ListTeamApplicationsStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
 } as const;

@@ -32,6 +32,7 @@ export const ListComplaintsResponseItem = zod.object({
   description: zod.string(),
   status: zod.enum(["pending", "in_progress", "resolved"]),
   createdAt: zod.coerce.date(),
+  citizenId: zod.number().nullish(),
   updatedAt: zod.coerce.date(),
 });
 export const ListComplaintsResponse = zod.array(ListComplaintsResponseItem);
@@ -65,6 +66,7 @@ export const GetComplaintResponse = zod.object({
   description: zod.string(),
   status: zod.enum(["pending", "in_progress", "resolved"]),
   createdAt: zod.coerce.date(),
+  citizenId: zod.number().nullish(),
   updatedAt: zod.coerce.date(),
 });
 
@@ -100,6 +102,7 @@ export const UpdateComplaintStatusResponse = zod.object({
   description: zod.string(),
   status: zod.enum(["pending", "in_progress", "resolved"]),
   createdAt: zod.coerce.date(),
+  citizenId: zod.number().nullish(),
   updatedAt: zod.coerce.date(),
 });
 
@@ -376,3 +379,139 @@ export const GetRecentActivityResponseItem = zod.object({
 export const GetRecentActivityResponse = zod.array(
   GetRecentActivityResponseItem,
 );
+
+/**
+ * @summary Register a new citizen account
+ */
+export const CitizenSignupBody = zod.object({
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string(),
+  password: zod.string(),
+  ward: zod.number(),
+  palika: zod.string(),
+});
+
+/**
+ * @summary Login as a citizen
+ */
+export const CitizenLoginBody = zod.object({
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const CitizenLoginResponse = zod.object({
+  token: zod.string(),
+  citizen: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    phone: zod.string(),
+    email: zod.string(),
+    ward: zod.number(),
+    palika: zod.string(),
+    createdAt: zod.coerce.date(),
+  }),
+});
+
+/**
+ * @summary Get current citizen profile (requires Bearer token)
+ */
+export const GetCitizenMeResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  email: zod.string(),
+  ward: zod.number(),
+  palika: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Get complaints submitted by the logged-in citizen
+ */
+export const GetCitizenComplaintsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string().optional(),
+  palika: zod.string(),
+  ward: zod.number(),
+  category: zod.string(),
+  description: zod.string(),
+  status: zod.enum(["pending", "in_progress", "resolved"]),
+  createdAt: zod.coerce.date(),
+  citizenId: zod.number().nullish(),
+  updatedAt: zod.coerce.date(),
+});
+export const GetCitizenComplaintsResponse = zod.array(
+  GetCitizenComplaintsResponseItem,
+);
+
+/**
+ * @summary List team applications (admin) or own application (citizen)
+ */
+export const ListTeamApplicationsQueryParams = zod.object({
+  status: zod.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+export const ListTeamApplicationsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  ward: zod.number(),
+  palika: zod.string(),
+  skills: zod.string(),
+  message: zod.string().nullish(),
+  citizenId: zod.number().nullish(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListTeamApplicationsResponse = zod.array(
+  ListTeamApplicationsResponseItem,
+);
+
+/**
+ * @summary Submit a team membership application
+ */
+export const CreateTeamApplicationBody = zod.object({
+  name: zod.string(),
+  phone: zod.string(),
+  ward: zod.number(),
+  palika: zod.string(),
+  skills: zod.string(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Approve or reject a team application (admin only)
+ */
+export const UpdateTeamApplicationStatusParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateTeamApplicationStatusBody = zod.object({
+  status: zod.enum(["pending", "approved", "rejected"]),
+});
+
+export const UpdateTeamApplicationStatusResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  ward: zod.number(),
+  palika: zod.string(),
+  skills: zod.string(),
+  message: zod.string().nullish(),
+  citizenId: zod.number().nullish(),
+  status: zod.enum(["pending", "approved", "rejected"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a team application (admin only)
+ */
+export const DeleteTeamApplicationParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteTeamApplicationResponse = zod.object({
+  deleted: zod.number(),
+});

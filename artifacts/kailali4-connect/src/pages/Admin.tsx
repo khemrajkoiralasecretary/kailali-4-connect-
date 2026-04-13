@@ -7,6 +7,7 @@ import {
   useDeleteTeamMember, useEditTeamMember, useJoinTeam, useUpdateTeamRank,
   useGetHomeContent, useUpdateHomeContent,
   useGetSocialLinks, useUpdateSocialLinks,
+  useListTeamApplications, useUpdateTeamApplicationStatus, useDeleteTeamApplication,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +23,7 @@ const SUPER_PIN = "1234";
 const STAFF_PIN  = "5678";
 
 type AdminRole = "super_admin" | "staff";
-type TabKey = "analytics" | "complaints" | "team" | "home" | "theme" | "profile";
+type TabKey = "analytics" | "complaints" | "team" | "applications" | "home" | "theme" | "profile";
 
 const THEMES = [
   { key: "red",    label: "Red",    labelNp: "रातो",  color: "bg-red-600" },
@@ -732,6 +733,116 @@ function HomeContentTab() {
   );
 }
 
+// ── TEAM APPLICATIONS TAB ─────────────────────────────────────────────────────
+function ApplicationsTab() {
+  const { language } = useI18n();
+  const qc = useQueryClient();
+  const { data: applications = [], isLoading } = useListTeamApplications({});
+
+  const updateStatus = useUpdateTeamApplicationStatus({
+    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["listTeamApplications"] }) },
+  });
+  const deleteApp = useDeleteTeamApplication({
+    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: ["listTeamApplications"] }) },
+  });
+
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
+  const filtered = applications.filter(a => !filterStatus || a.status === filterStatus);
+
+  const statusCls = (s: string) => ({
+    pending:  "bg-yellow-100 text-yellow-800",
+    approved: "bg-green-100 text-green-800",
+    rejected: "bg-red-100 text-red-800",
+  }[s] ?? "bg-muted text-foreground");
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+          className="px-2 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none">
+          <option value="">{language === "NP" ? "सबै स्थिति" : "All Status"}</option>
+          <option value="pending">{language === "NP" ? "विचाराधीन" : "Pending"}</option>
+          <option value="approved">{language === "NP" ? "स्वीकृत" : "Approved"}</option>
+          <option value="rejected">{language === "NP" ? "अस्वीकृत" : "Rejected"}</option>
+        </select>
+        <span className="text-xs text-muted-foreground ml-auto">
+          {filtered.length} {language === "NP" ? "आवेदनहरू" : "applications"}
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground text-sm">
+          {language === "NP" ? "लोड हुँदैछ..." : "Loading..."}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground text-sm">
+          {language === "NP" ? "कुनै आवेदन छैन" : "No applications found"}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map(app => (
+            <div key={app.id} className="border border-border rounded-xl p-4 bg-card">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm text-foreground">{app.name}</span>
+                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-semibold", statusCls(app.status))}>
+                      {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {app.phone} · {app.palika} · Ward {app.ward}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {language === "NP" ? "सीप: " : "Skills: "}{app.skills}
+                  </p>
+                  {app.message && (
+                    <p className="text-xs text-muted-foreground mt-0.5 italic">"{app.message}"</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {app.status !== "approved" && (
+                    <button onClick={() => updateStatus.mutate({ id: app.id, data: { status: "approved" } })}
+                      className="px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-200 rounded-lg hover:bg-green-200 transition-colors font-medium">
+                      {language === "NP" ? "स्वीकार" : "Approve"}
+                    </button>
+                  )}
+                  {app.status !== "rejected" && (
+                    <button onClick={() => updateStatus.mutate({ id: app.id, data: { status: "rejected" } })}
+                      className="px-2 py-1 text-xs bg-orange-100 text-orange-700 border border-orange-200 rounded-lg hover:bg-orange-200 transition-colors font-medium">
+                      {language === "NP" ? "अस्वीकार" : "Reject"}
+                    </button>
+                  )}
+                  {confirmDelete === app.id ? (
+                    <>
+                      <button onClick={() => { deleteApp.mutate({ id: app.id }); setConfirmDelete(null); }}
+                        className="px-2 py-1 text-xs bg-red-600 text-white rounded-lg font-medium">
+                        {language === "NP" ? "पक्का?" : "Sure?"}
+                      </button>
+                      <button onClick={() => setConfirmDelete(null)}
+                        className="p-1 rounded-lg hover:bg-muted"><X size={12} /></button>
+                    </>
+                  ) : (
+                    <button onClick={() => setConfirmDelete(app.id)}
+                      className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {new Date(app.createdAt).toLocaleDateString()} {app.citizenId ? `· Citizen #${app.citizenId}` : ""}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── MAIN ADMIN COMPONENT ──────────────────────────────────────────────────────
 export default function Admin() {
   const { language } = useI18n();
@@ -779,10 +890,11 @@ export default function Admin() {
     { key: "analytics",  label: "Analytics",  labelNp: "विश्लेषण",    icon: BarChart2 },
     { key: "complaints", label: "Complaints", labelNp: "उजुरीहरू",    icon: FileText },
     ...(isSuperAdmin ? [
-      { key: "team" as TabKey,    label: "Team",         labelNp: "टोली",         icon: Users },
-      { key: "home" as TabKey,    label: "Home",         labelNp: "होम",          icon: Home },
-      { key: "theme" as TabKey,   label: "Theme",        labelNp: "थिम",          icon: Palette },
-      { key: "profile" as TabKey, label: "MP Profile",   labelNp: "सांसद",        icon: User },
+      { key: "team" as TabKey,         label: "Team",         labelNp: "टोली",         icon: Users },
+      { key: "applications" as TabKey, label: "Applications", labelNp: "आवेदनहरू",    icon: UserCheck },
+      { key: "home" as TabKey,         label: "Home",         labelNp: "होम",          icon: Home },
+      { key: "theme" as TabKey,        label: "Theme",        labelNp: "थिम",          icon: Palette },
+      { key: "profile" as TabKey,      label: "MP Profile",   labelNp: "सांसद",        icon: User },
     ] : []),
   ];
 
@@ -855,10 +967,11 @@ export default function Admin() {
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.15 }}
         >
-          {safeTab === "analytics"  && <AnalyticsTab />}
-          {safeTab === "complaints" && <ComplaintsTab role={role} />}
-          {safeTab === "team"       && isSuperAdmin && <TeamTab />}
-          {safeTab === "home"       && isSuperAdmin && <HomeContentTab />}
+          {safeTab === "analytics"    && <AnalyticsTab />}
+          {safeTab === "complaints"   && <ComplaintsTab role={role} />}
+          {safeTab === "team"         && isSuperAdmin && <TeamTab />}
+          {safeTab === "applications" && isSuperAdmin && <ApplicationsTab />}
+          {safeTab === "home"         && isSuperAdmin && <HomeContentTab />}
 
           {safeTab === "theme" && isSuperAdmin && (
             <Section icon={Palette} title={language === "NP" ? "थिम रङ" : "Theme Color"}>

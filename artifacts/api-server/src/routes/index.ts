@@ -6,6 +6,8 @@ import newsRouter from "./news";
 import dashboardRouter from "./dashboard";
 import teamRouter from "./team";
 import settingsRouter from "./settings";
+import citizensRouter from "./citizens";
+import teamApplicationsRouter from "./team-applications";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use("/news", newsRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/team", teamRouter);
 router.use("/settings", settingsRouter);
+router.use("/citizens", citizensRouter);
+router.use("/team-applications", teamApplicationsRouter);
 
 export default router;

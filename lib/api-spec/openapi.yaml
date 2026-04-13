@@ -21,6 +21,10 @@ tags:
     description: Team member registry
   - name: settings
     description: Site settings and configuration
+  - name: citizens
+    description: Citizen authentication and account management
+  - name: team-applications
+    description: Citizen team membership applications
 paths:
   /healthz:
     get:
@@ -495,6 +499,182 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityItem"
 
+  /citizens/signup:
+    post:
+      operationId: citizenSignup
+      tags: [citizens]
+      summary: Register a new citizen account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenSignupBody"
+      responses:
+        "201":
+          description: Citizen registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenAuthResponse"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /citizens/login:
+    post:
+      operationId: citizenLogin
+      tags: [citizens]
+      summary: Login as a citizen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenLoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenAuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /citizens/me:
+    get:
+      operationId: getCitizenMe
+      tags: [citizens]
+      summary: Get current citizen profile (requires Bearer token)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Citizen profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /citizens/complaints:
+    get:
+      operationId: getCitizenComplaints
+      tags: [citizens]
+      summary: Get complaints submitted by the logged-in citizen
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Citizen complaints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Complaint"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /team-applications:
+    get:
+      operationId: listTeamApplications
+      tags: [team-applications]
+      summary: List team applications (admin) or own application (citizen)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamApplication"
+    post:
+      operationId: createTeamApplication
+      tags: [team-applications]
+      summary: Submit a team membership application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeamApplicationBody"
+      responses:
+        "201":
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamApplication"
+
+  /team-applications/{id}:
+    patch:
+      operationId: updateTeamApplicationStatus
+      tags: [team-applications]
+      summary: Approve or reject a team application (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTeamApplicationStatusBody"
+      responses:
+        "200":
+          description: Application updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamApplication"
+        "404":
+          description: Application not found
+    delete:
+      operationId: deleteTeamApplication
+      tags: [team-applications]
+      summary: Delete a team application (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Application deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAllResult"
+
 components:
   schemas:
     HealthStatus:
@@ -528,6 +708,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        citizenId:
+          type: integer
+          nullable: true
         updatedAt:
           type: string
           format: date-time
@@ -829,3 +1012,157 @@ components:
         - title
         - description
         - timestamp
+
+    CitizenSignupBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        ward:
+          type: integer
+        palika:
+          type: string
+      required:
+        - name
+        - phone
+        - email
+        - password
+        - ward
+        - palika
+
+    CitizenLoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    CitizenProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        ward:
+          type: integer
+        palika:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - phone
+        - email
+        - ward
+        - palika
+        - createdAt
+
+    CitizenAuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        citizen:
+          $ref: "#/components/schemas/CitizenProfile"
+      required:
+        - token
+        - citizen
+
+    TeamApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        ward:
+          type: integer
+        palika:
+          type: string
+        skills:
+          type: string
+        message:
+          type: string
+          nullable: true
+        citizenId:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - phone
+        - ward
+        - palika
+        - skills
+        - status
+        - createdAt
+
+    CreateTeamApplicationBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        ward:
+          type: integer
+        palika:
+          type: string
+        skills:
+          type: string
+        message:
+          type: string
+      required:
+        - name
+        - phone
+        - ward
+        - palika
+        - skills
+
+    UpdateTeamApplicationStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

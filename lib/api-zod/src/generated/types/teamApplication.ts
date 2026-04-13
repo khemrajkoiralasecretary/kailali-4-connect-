@@ -5,18 +5,17 @@
  * Kailali-4 Connect - MP Office Digital Governance Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { ComplaintStatus } from "./complaintStatus";
+import type { TeamApplicationStatus } from "./teamApplicationStatus";
 
-export interface Complaint {
+export interface TeamApplication {
   id: number;
   name: string;
-  phone?: string;
-  palika: string;
+  phone: string;
   ward: number;
-  category: string;
-  description: string;
-  status: ComplaintStatus;
-  createdAt: Date;
+  palika: string;
+  skills: string;
+  message?: string | null;
   citizenId?: number | null;
-  updatedAt: Date;
+  status: TeamApplicationStatus;
+  createdAt: Date;
 }

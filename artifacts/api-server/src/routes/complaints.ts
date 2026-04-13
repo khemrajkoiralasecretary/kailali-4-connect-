@@ -8,6 +8,7 @@ import {
   GetComplaintParams,
   UpdateComplaintStatusParams,
 } from "@workspace/api-zod";
+import { verifyToken, extractToken } from "./citizens";
 
 const router = Router();
 
@@ -41,9 +42,14 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Invalid request body" });
   }
 
+  const token = extractToken(req.headers.authorization);
+  const payload = token ? verifyToken(token) : null;
+  const citizenId = payload?.citizenId ?? null;
+
   const [complaint] = await db.insert(complaintsTable).values({
     ...parsed.data,
     palika: parsed.data.palika ?? "",
+    citizenId,
   }).returning();
 
   return res.status(201).json({
