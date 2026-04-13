@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useGetComplaint, useUpdateComplaintStatus, getGetComplaintQueryKey, getListComplaintsQueryKey } from "@workspace/api-client-react";
 import { useParams } from "wouter";
@@ -73,6 +74,7 @@ export default function ComplaintDetail() {
   const params = useParams<{ id: string }>();
   const id = parseInt(params.id ?? "0");
   const queryClient = useQueryClient();
+  const [isAdmin] = useState(() => !!sessionStorage.getItem("k4-admin-token"));
 
   const { data: complaint, isLoading } = useGetComplaint(id, {
     query: { enabled: !!id, queryKey: getGetComplaintQueryKey(id) },
@@ -159,27 +161,31 @@ export default function ComplaintDetail() {
         </div>
       </motion.div>
 
-      {/* Status Update */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Update Status</h3>
-        <div className="flex flex-wrap gap-2">
-          {STATUS_OPTIONS.map((status) => (
-            <button
-              key={status}
-              onClick={() => handleStatusChange(status)}
-              disabled={updating || complaint.status === status}
-              className={cn(
-                "px-4 py-2 text-sm rounded-lg border font-medium transition-all capitalize",
-                complaint.status === status
-                  ? STATUS_COLORS[status]
-                  : "border-border hover:bg-muted disabled:opacity-50"
-              )}
-            >
-              {STATUS_LABELS[language]?.[status] ?? status}
-            </button>
-          ))}
+      {/* Status Update — admin only */}
+      {isAdmin && (
+        <div className="bg-card border border-border rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-3">
+            {language === "NP" ? "स्थिति अद्यावधिक गर्नुस्" : "Update Status"}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_OPTIONS.map((status) => (
+              <button
+                key={status}
+                onClick={() => handleStatusChange(status)}
+                disabled={updating || complaint.status === status}
+                className={cn(
+                  "px-4 py-2 text-sm rounded-lg border font-medium transition-all capitalize",
+                  complaint.status === status
+                    ? STATUS_COLORS[status]
+                    : "border-border hover:bg-muted disabled:opacity-50"
+                )}
+              >
+                {STATUS_LABELS[language]?.[status] ?? status}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
