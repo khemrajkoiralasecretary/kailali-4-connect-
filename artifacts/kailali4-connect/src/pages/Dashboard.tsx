@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import {
   useGetDashboardStats,
   useGetWardBreakdown,
   useGetRecentActivity,
   useGetMpProfile,
+  useGetComplaint,
 } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -16,7 +18,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User } from "lucide-react";
+import { FileText, Lightbulb, Newspaper, Clock, CheckCircle2, AlertCircle, ArrowRight, User, Search, MapPin, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
@@ -30,6 +32,148 @@ const statusIcons: Record<string, React.ComponentType<{ size?: number }>> = {
   idea: Lightbulb,
   news: Newspaper,
 };
+
+const trackStatusConfig = {
+  pending:     { label: "Pending",     labelNp: "विचाराधीन", cls: "bg-orange-100 text-orange-700 border-orange-200" },
+  in_progress: { label: "In Progress", labelNp: "प्रगतिमा",  cls: "bg-blue-100 text-blue-700 border-blue-200" },
+  resolved:    { label: "Resolved",    labelNp: "समाधान",    cls: "bg-green-100 text-green-700 border-green-200" },
+};
+
+function ComplaintTracker() {
+  const { language } = useI18n();
+  const [inputVal, setInputVal] = useState("");
+  const [trackId, setTrackId]   = useState<number | null>(null);
+
+  const { data, isLoading, isError } = useGetComplaint(trackId ?? 0, {
+    query: { enabled: trackId !== null && trackId > 0 },
+  });
+
+  const handleTrack = () => {
+    const id = parseInt(inputVal.trim(), 10);
+    if (!isNaN(id) && id > 0) setTrackId(id);
+  };
+
+  const status = (data?.status ?? "pending") as keyof typeof trackStatusConfig;
+  const cfg    = trackStatusConfig[status] ?? trackStatusConfig.pending;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Search size={16} className="text-primary" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-foreground text-sm">
+            {language === "NP" ? "उजुरी ट्र्याक गर्नुहोस्" : "Track Your Complaint"}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {language === "NP" ? "आफ्नो उजुरी नम्बर प्रविष्ट गर्नुहोस्" : "Enter your complaint ID to see its current status"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <input
+          type="number"
+          min={1}
+          value={inputVal}
+          onChange={(e) => { setInputVal(e.target.value); setTrackId(null); }}
+          onKeyDown={(e) => e.key === "Enter" && handleTrack()}
+          placeholder={language === "NP" ? "उजुरी ID (जस्तै: 1, 2, 3...)" : "Complaint ID (e.g. 1, 2, 3...)"}
+          className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <button
+          onClick={handleTrack}
+          disabled={!inputVal.trim() || isLoading}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1.5"
+        >
+          <Search size={14} />
+          {language === "NP" ? "खोज्नुस्" : "Track"}
+        </button>
+      </div>
+
+      {isLoading && (
+        <div className="mt-3 h-20 animate-pulse bg-muted rounded-xl" />
+      )}
+
+      {isError && trackId !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2"
+        >
+          <AlertCircle size={15} />
+          {language === "NP"
+            ? `उजुरी #${trackId} फेला परेन। ID सही भए पनि डेटाबेसमा नभएको हुन सक्छ।`
+            : `Complaint #${trackId} not found. Please verify the ID number.`}
+        </motion.div>
+      )}
+
+      {data && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 p-4 rounded-xl border border-border bg-muted/30 space-y-3"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                {language === "NP" ? "उजुरी" : "Complaint"} #{data.id}
+              </p>
+              <p className="text-sm font-semibold text-foreground mt-0.5 leading-snug">{data.name}</p>
+            </div>
+            <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 mt-1", cfg.cls)}>
+              {language === "NP" ? cfg.labelNp : cfg.label}
+            </span>
+          </div>
+
+          <p className="text-sm text-foreground/80 leading-relaxed">{data.description}</p>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
+            <span className="flex items-center gap-1">
+              <MapPin size={11} />
+              {data.palika} — Ward {data.ward}
+            </span>
+            <span className="flex items-center gap-1">
+              <Calendar size={11} />
+              {new Date(data.createdAt).toLocaleDateString()}
+            </span>
+          </div>
+
+          {/* Status timeline */}
+          <div className="flex items-center gap-2 pt-1">
+            {(["pending", "in_progress", "resolved"] as const).map((s, i, arr) => {
+              const stOrder = ["pending", "in_progress", "resolved"];
+              const curIdx  = stOrder.indexOf(data.status ?? "pending");
+              const sIdx    = stOrder.indexOf(s);
+              const done    = sIdx <= curIdx;
+              const labels  = {
+                pending:     language === "NP" ? "दर्ता" : "Filed",
+                in_progress: language === "NP" ? "प्रक्रिया" : "In Progress",
+                resolved:    language === "NP" ? "समाधान" : "Resolved",
+              };
+              return (
+                <div key={s} className="flex items-center gap-2 flex-1">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className={cn("w-3 h-3 rounded-full border-2 transition-all",
+                      done ? "bg-primary border-primary" : "border-border bg-background"
+                    )} />
+                    <span className={cn("text-xs leading-none", done ? "text-primary font-medium" : "text-muted-foreground")}>
+                      {labels[s]}
+                    </span>
+                  </div>
+                  {i < arr.length - 1 && (
+                    <div className={cn("h-0.5 flex-1 -mt-4 rounded", done && sIdx < curIdx ? "bg-primary" : "bg-border")} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
 
 function StatCard({ label, value, icon: Icon, colorClass }: { label: string; value: number; icon: React.ComponentType<{ size?: number, className?: string }>; colorClass: string }) {
   return (
@@ -98,6 +242,9 @@ export default function Dashboard() {
           <p className="text-sm opacity-80 mt-1">{mpProfile?.message ?? "Serving with transparency, accountability, and dedication to the people of Kailali Constituency 4"}</p>
         </div>
       </div>
+
+      {/* Complaint Tracker */}
+      <ComplaintTracker />
 
       {/* Stats Cards */}
       {statsLoading ? (
