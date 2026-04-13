@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
-import { Wallet, TrendingUp, TrendingDown, Scale, Trophy, QrCode, CalendarSearch, X } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Scale, Trophy, QrCode, CalendarSearch, X, BarChart2 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
 type Donation = { id: number; name: string; amount: number; date: string; created_at: string };
 type Expense  = { id: number; title: string; amount: number; date: string; created_at: string };
@@ -51,6 +54,21 @@ export default function Fund() {
 
   const filteredDonationTotal = visibleDonations.reduce((a, d) => a + Number(d.amount), 0);
   const filteredExpenseTotal  = visibleExpenses.reduce((a, e) => a + Number(e.amount), 0);
+
+  const chartData = useMemo(() => {
+    const map: Record<string, { date: string; Donations: number; Expenses: number }> = {};
+    donations.forEach(d => {
+      const key = String(d.date).slice(0, 10);
+      if (!map[key]) map[key] = { date: key, Donations: 0, Expenses: 0 };
+      map[key].Donations += Number(d.amount);
+    });
+    expenses.forEach(e => {
+      const key = String(e.date).slice(0, 10);
+      if (!map[key]) map[key] = { date: key, Donations: 0, Expenses: 0 };
+      map[key].Expenses += Number(e.amount);
+    });
+    return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+  }, [donations, expenses]);
 
   const summaryCards = applied
     ? [
@@ -137,6 +155,30 @@ export default function Fund() {
           </motion.div>
         ))}
       </div>
+
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+            <BarChart2 size={16} className="text-primary" />
+            {NP ? "आय/व्यय चार्ट" : "Donations vs Expenses"}
+          </h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={chartData} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={v => `Rs ${v}`} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 13 }}
+                formatter={(val: number) => [`Rs ${Number(val).toLocaleString()}`, undefined]}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="Donations" fill="#16a34a" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Expenses"  fill="#dc2626" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Donors */}
