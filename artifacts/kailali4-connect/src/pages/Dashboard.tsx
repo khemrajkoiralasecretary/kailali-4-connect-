@@ -199,6 +199,7 @@ export default function Dashboard() {
   const { data: wardBreakdown, isLoading: wardLoading } = useGetWardBreakdown();
   const { data: activity, isLoading: activityLoading } = useGetRecentActivity();
   const { data: mpProfile } = useGetMpProfile();
+  const [mpPhotoErr, setMpPhotoErr] = useState(false);
 
   const wardChartData = wardBreakdown?.map((w) => ({
     name: `${t("dashboard.ward")} ${w.ward}`,
@@ -232,8 +233,8 @@ export default function Dashboard() {
       {/* MP Profile */}
       <div className="bg-primary text-primary-foreground rounded-xl p-6 flex items-center gap-5 shadow-md">
         <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {mpProfile?.photoUrl
-            ? <img src={mpProfile.photoUrl} alt="MP" className="w-full h-full object-cover" />
+          {mpProfile?.photoUrl && !mpPhotoErr
+            ? <img src={mpProfile.photoUrl} alt="MP" className="w-full h-full object-cover" onError={() => setMpPhotoErr(true)} />
             : <User size={32} className="opacity-80" />}
         </div>
         <div>

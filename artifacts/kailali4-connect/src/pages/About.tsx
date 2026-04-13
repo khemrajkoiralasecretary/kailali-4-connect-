@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useGetMpProfile, useGetSocialLinks, useGetDashboardStats, useListTeamMembers } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
@@ -13,6 +14,7 @@ export default function About() {
   const { data: socialLinks }  = useGetSocialLinks();
   const { data: stats }        = useGetDashboardStats();
   const { data: teamMembers }  = useListTeamMembers({});
+  const [mpPhotoErr, setMpPhotoErr] = useState(false);
 
   const hasSocial = socialLinks?.facebook || socialLinks?.youtube || socialLinks?.website;
 
@@ -71,8 +73,8 @@ export default function About() {
         className="bg-primary text-primary-foreground rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-lg"
       >
         <div className="w-24 h-24 rounded-full bg-white/20 flex-shrink-0 overflow-hidden flex items-center justify-center border-4 border-white/30">
-          {mpProfile?.photoUrl
-            ? <img src={mpProfile.photoUrl} alt="MP" className="w-full h-full object-cover" />
+          {mpProfile?.photoUrl && !mpPhotoErr
+            ? <img src={mpProfile.photoUrl} alt="MP" className="w-full h-full object-cover" onError={() => setMpPhotoErr(true)} />
             : <User size={40} className="opacity-80" />
           }
         </div>
