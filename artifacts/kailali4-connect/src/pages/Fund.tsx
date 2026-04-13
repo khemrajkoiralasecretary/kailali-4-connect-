@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
-import { Wallet, TrendingUp, TrendingDown, Scale, Trophy, QrCode } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, Scale, Trophy, QrCode, CalendarSearch, X } from "lucide-react";
 
 type Donation = { id: number; name: string; amount: number; date: string; created_at: string };
 type Expense  = { id: number; title: string; amount: number; date: string; created_at: string };
@@ -16,6 +17,9 @@ function fmt(n: number) {
 export default function Fund() {
   const { language } = useI18n();
   const NP = language === "NP";
+
+  const [filterDate, setFilterDate] = useState("");
+  const [applied, setApplied]       = useState("");
 
   const { data: summary } = useQuery<Summary>({
     queryKey: ["fundSummary"],
@@ -37,31 +41,34 @@ export default function Fund() {
     queryFn: () => fetch(`${BASE}/qr`).then(r => r.json()),
   });
 
-  const summaryCards = [
-    {
-      icon: TrendingUp,
-      label: NP ? "कुल दान"  : "Total Donations",
-      value: fmt(summary?.totalDonations ?? 0),
-      cls: "bg-green-50 text-green-700 border-green-200",
-      iconCls: "text-green-600",
-    },
-    {
-      icon: TrendingDown,
-      label: NP ? "कुल खर्च" : "Total Expenses",
-      value: fmt(summary?.totalExpenses ?? 0),
-      cls: "bg-red-50 text-red-700 border-red-200",
-      iconCls: "text-red-600",
-    },
-    {
-      icon: Scale,
-      label: NP ? "ब्यालेन्स"  : "Balance",
-      value: fmt(summary?.balance ?? 0),
-      cls: (summary?.balance ?? 0) >= 0
-        ? "bg-blue-50 text-blue-700 border-blue-200"
-        : "bg-orange-50 text-orange-700 border-orange-200",
-      iconCls: (summary?.balance ?? 0) >= 0 ? "text-blue-600" : "text-orange-600",
-    },
-  ];
+  const visibleDonations = applied
+    ? donations.filter(d => String(d.date).slice(0, 10) === applied)
+    : donations;
+
+  const visibleExpenses = applied
+    ? expenses.filter(e => String(e.date).slice(0, 10) === applied)
+    : expenses;
+
+  const filteredDonationTotal = visibleDonations.reduce((a, d) => a + Number(d.amount), 0);
+  const filteredExpenseTotal  = visibleExpenses.reduce((a, e) => a + Number(e.amount), 0);
+
+  const summaryCards = applied
+    ? [
+        { icon: TrendingUp,   label: NP ? "दान (फिल्टर)" : "Donations (filtered)", value: fmt(filteredDonationTotal), cls: "bg-green-50 text-green-700 border-green-200",  iconCls: "text-green-600" },
+        { icon: TrendingDown, label: NP ? "खर्च (फिल्टर)" : "Expenses (filtered)",  value: fmt(filteredExpenseTotal),  cls: "bg-red-50 text-red-700 border-red-200",        iconCls: "text-red-600" },
+        { icon: Scale,        label: NP ? "ब्यालेन्स"     : "Balance",              value: fmt(filteredDonationTotal - filteredExpenseTotal),
+          cls: filteredDonationTotal >= filteredExpenseTotal ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-orange-50 text-orange-700 border-orange-200",
+          iconCls: filteredDonationTotal >= filteredExpenseTotal ? "text-blue-600" : "text-orange-600" },
+      ]
+    : [
+        { icon: TrendingUp,   label: NP ? "कुल दान"   : "Total Donations", value: fmt(summary?.totalDonations ?? 0), cls: "bg-green-50 text-green-700 border-green-200",  iconCls: "text-green-600" },
+        { icon: TrendingDown, label: NP ? "कुल खर्च"  : "Total Expenses",  value: fmt(summary?.totalExpenses ?? 0),  cls: "bg-red-50 text-red-700 border-red-200",        iconCls: "text-red-600" },
+        { icon: Scale,        label: NP ? "ब्यालेन्स" : "Balance",         value: fmt(summary?.balance ?? 0),
+          cls: (summary?.balance ?? 0) >= 0 ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-orange-50 text-orange-700 border-orange-200",
+          iconCls: (summary?.balance ?? 0) >= 0 ? "text-blue-600" : "text-orange-600" },
+      ];
+
+  const inputCls = "px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
@@ -78,6 +85,38 @@ export default function Fund() {
             {NP ? "कैलाली-४ निर्वाचन क्षेत्र — आय/व्यय विवरण" : "Kailali Constituency 4 — Public Financial Record"}
           </p>
         </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <CalendarSearch size={16} className="text-muted-foreground" />
+        <input
+          type="date"
+          value={filterDate}
+          onChange={e => setFilterDate(e.target.value)}
+          className={inputCls}
+        />
+        <button
+          onClick={() => setApplied(filterDate)}
+          disabled={!filterDate}
+          className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-40 font-medium"
+        >
+          {NP ? "फिल्टर" : "Filter"}
+        </button>
+        {applied && (
+          <button
+            onClick={() => { setApplied(""); setFilterDate(""); }}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+          >
+            <X size={13} />
+            {NP ? "हटाउनुस्" : "Clear"}
+          </button>
+        )}
+        {applied && (
+          <span className="text-xs text-muted-foreground">
+            {NP ? `मिति: ${applied}` : `Showing: ${applied}`}
+          </span>
+        )}
       </div>
 
       {/* Summary cards */}
@@ -106,13 +145,13 @@ export default function Fund() {
             <Trophy size={16} className="text-yellow-500" />
             {NP ? "शीर्ष दाताहरू" : "Top Donors"}
           </h2>
-          {donations.length === 0 ? (
+          {visibleDonations.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              {NP ? "कुनै दान छैन" : "No donations yet"}
+              {applied ? (NP ? "यस मितिमा कुनै दान छैन" : "No donations on this date") : (NP ? "कुनै दान छैन" : "No donations yet")}
             </p>
           ) : (
             <div className="space-y-2">
-              {donations.map((d, i) => (
+              {visibleDonations.map((d, i) => (
                 <motion.div
                   key={d.id}
                   initial={{ opacity: 0, x: -8 }}
@@ -144,13 +183,13 @@ export default function Fund() {
             <TrendingDown size={16} className="text-red-500" />
             {NP ? "खर्च विवरण" : "Expenses"}
           </h2>
-          {expenses.length === 0 ? (
+          {visibleExpenses.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              {NP ? "कुनै खर्च छैन" : "No expenses yet"}
+              {applied ? (NP ? "यस मितिमा कुनै खर्च छैन" : "No expenses on this date") : (NP ? "कुनै खर्च छैन" : "No expenses yet")}
             </p>
           ) : (
             <div className="space-y-2">
-              {expenses.map((e, i) => (
+              {visibleExpenses.map((e, i) => (
                 <motion.div
                   key={e.id}
                   initial={{ opacity: 0, x: 8 }}
