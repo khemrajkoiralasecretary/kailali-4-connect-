@@ -8,7 +8,6 @@ export interface CitizenProfile {
   id: number;
   name: string;
   phone: string;
-  email: string;
   ward: number;
   palika: string;
   createdAt: string;

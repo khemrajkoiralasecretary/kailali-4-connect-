@@ -70,7 +70,7 @@ export default function CitizenDashboard() {
         </div>
         <div>
           <p className="font-semibold">{citizen.name}</p>
-          <p className="text-xs opacity-80">{citizen.email}</p>
+          <p className="text-xs opacity-80">{citizen.phone}</p>
           <div className="flex items-center gap-1 text-xs opacity-70 mt-0.5">
             <MapPin size={10} />
             {citizen.palika} — Ward {citizen.ward}

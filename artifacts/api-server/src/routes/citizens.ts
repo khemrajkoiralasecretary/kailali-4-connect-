@@ -9,13 +9,13 @@ const router = Router();
 const JWT_SECRET = process.env["SESSION_SECRET"] ?? "kailali4-secret-fallback";
 const SALT_ROUNDS = 10;
 
-function signToken(citizenId: number, email: string): string {
-  return jwt.sign({ citizenId, email }, JWT_SECRET, { expiresIn: "30d" });
+function signToken(citizenId: number, phone: string): string {
+  return jwt.sign({ citizenId, phone }, JWT_SECRET, { expiresIn: "30d" });
 }
 
-export function verifyToken(token: string): { citizenId: number; email: string } | null {
+export function verifyToken(token: string): { citizenId: number; phone: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { citizenId: number; email: string };
+    return jwt.verify(token, JWT_SECRET) as { citizenId: number; phone: string };
   } catch {
     return null;
   }
@@ -26,31 +26,46 @@ export function extractToken(authHeader?: string): string | null {
   return authHeader.slice(7);
 }
 
+// ── POST /signup ──────────────────────────────────────────────────────────────
 router.post("/signup", async (req, res) => {
-  const { name, phone, email, password, ward, palika } = req.body ?? {};
+  const { name, phone, password, ward, palika } = req.body ?? {};
 
-  if (!name || !phone || !email || !password || !ward || !palika) {
+  if (!name || !phone || !password || !ward || !palika) {
     return res.status(400).json({ error: "All fields are required" });
+  }
+
+  if (String(phone).length < 7) {
+    return res.status(400).json({ error: "Invalid phone number" });
+  }
+
+  if (String(password).length < 4) {
+    return res.status(400).json({ error: "Password must be at least 4 characters" });
   }
 
   const existing = await db
     .select({ id: citizensTable.id })
     .from(citizensTable)
-    .where(eq(citizensTable.email, email))
+    .where(eq(citizensTable.phone, String(phone)))
     .limit(1);
 
   if (existing.length > 0) {
-    return res.status(409).json({ error: "Email already registered" });
+    return res.status(409).json({ error: "Phone number already registered" });
   }
 
-  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(String(password), SALT_ROUNDS);
 
   const [citizen] = await db
     .insert(citizensTable)
-    .values({ name, phone, email, passwordHash, ward: Number(ward), palika })
+    .values({
+      name: String(name),
+      phone: String(phone),
+      passwordHash,
+      ward: Number(ward),
+      palika: String(palika),
+    })
     .returning();
 
-  const token = signToken(citizen.id, citizen.email);
+  const token = signToken(citizen.id, citizen.phone);
 
   return res.status(201).json({
     token,
@@ -58,7 +73,6 @@ router.post("/signup", async (req, res) => {
       id: citizen.id,
       name: citizen.name,
       phone: citizen.phone,
-      email: citizen.email,
       ward: citizen.ward,
       palika: citizen.palika,
       createdAt: citizen.createdAt.toISOString(),
@@ -66,29 +80,30 @@ router.post("/signup", async (req, res) => {
   });
 });
 
+// ── POST /login ───────────────────────────────────────────────────────────────
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body ?? {};
+  const { phone, password } = req.body ?? {};
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+  if (!phone || !password) {
+    return res.status(400).json({ error: "Phone and password are required" });
   }
 
   const [citizen] = await db
     .select()
     .from(citizensTable)
-    .where(eq(citizensTable.email, email))
+    .where(eq(citizensTable.phone, String(phone)))
     .limit(1);
 
   if (!citizen) {
-    return res.status(401).json({ error: "Invalid email or password" });
+    return res.status(401).json({ error: "Invalid phone number or password" });
   }
 
-  const valid = await bcrypt.compare(password, citizen.passwordHash);
+  const valid = await bcrypt.compare(String(password), citizen.passwordHash);
   if (!valid) {
-    return res.status(401).json({ error: "Invalid email or password" });
+    return res.status(401).json({ error: "Invalid phone number or password" });
   }
 
-  const token = signToken(citizen.id, citizen.email);
+  const token = signToken(citizen.id, citizen.phone);
 
   return res.json({
     token,
@@ -96,7 +111,6 @@ router.post("/login", async (req, res) => {
       id: citizen.id,
       name: citizen.name,
       phone: citizen.phone,
-      email: citizen.email,
       ward: citizen.ward,
       palika: citizen.palika,
       createdAt: citizen.createdAt.toISOString(),
@@ -104,6 +118,7 @@ router.post("/login", async (req, res) => {
   });
 });
 
+// ── GET /me ───────────────────────────────────────────────────────────────────
 router.get("/me", async (req, res) => {
   const token = extractToken(req.headers.authorization);
   if (!token) return res.status(401).json({ error: "Unauthorized" });
@@ -123,13 +138,13 @@ router.get("/me", async (req, res) => {
     id: citizen.id,
     name: citizen.name,
     phone: citizen.phone,
-    email: citizen.email,
     ward: citizen.ward,
     palika: citizen.palika,
     createdAt: citizen.createdAt.toISOString(),
   });
 });
 
+// ── GET /complaints ───────────────────────────────────────────────────────────
 router.get("/complaints", async (req, res) => {
   const token = extractToken(req.headers.authorization);
   if (!token) return res.status(401).json({ error: "Unauthorized" });
