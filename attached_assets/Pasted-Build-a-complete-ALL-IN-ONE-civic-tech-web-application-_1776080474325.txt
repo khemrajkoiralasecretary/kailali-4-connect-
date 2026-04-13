@@ -1,0 +1,181 @@
+Build a complete ALL-IN-ONE civic-tech web application called “Kailali-4 Digital MP Office System” using HTML, CSS, and JavaScript (no frameworks).
+
+IMPORTANT:
+Build step by step and generate all files separately.
+
+----------------------------------
+🎯 CORE SYSTEM
+----------------------------------
+
+Create a full system with 3 roles:
+1. Super Admin
+2. Staff (Coordinator / Leader)
+3. Citizen
+
+----------------------------------
+👑 SUPER ADMIN (FULL CONTROL)
+----------------------------------
+
+Admin can control EVERYTHING:
+
+1. Complaint Management:
+- View all complaints
+- Update status (Pending, In Progress, Solved)
+- Delete complaints
+- Filter by Palika and Ward
+- Track ID system
+
+2. 🚨 Corruption System:
+- View all corruption reports
+- Red alert notification (🔴 NEW)
+- Reset alert after viewing
+
+3. 💡 IDEAS CONTROL:
+- View all submitted ideas
+- Delete ideas
+- (Optional: approve system)
+
+4. 📰 NEWS CONTROL (ADMIN ONLY):
+- Add news (title + description)
+- Update/edit news
+- Delete news
+- Store in localStorage
+- Public can only VIEW news (no edit, no add)
+
+5. 👥 TEAM APPLICATION:
+- View applications
+- Approve / Reject
+- Move approved to team list
+- Assign rank (Volunteer, Coordinator, Leader)
+
+6. 📊 ANALYTICS:
+- Total complaints
+- Total ideas
+- Total team members
+- Ward-wise and Palika-wise data
+
+7. 🎨 THEME SYSTEM:
+- Change theme (Blue, Red, Green, Black, Purple)
+
+----------------------------------
+👨‍💼 STAFF (LIMITED CONTROL)
+----------------------------------
+
+Staff (Coordinator / Leader) can:
+- View complaints
+- Update complaint status
+- Filter by ward/palika
+
+Staff CANNOT:
+- Delete complaints
+- Access ideas system
+- Access news control
+- Access admin settings
+
+----------------------------------
+🧑 CITIZEN (PUBLIC USER)
+----------------------------------
+
+Citizen must SIGN UP and LOGIN to access features.
+
+Citizen can:
+- Submit complaint (with Track ID auto-generated)
+- Submit ideas
+- Apply for team
+- Report corruption
+- View own complaint status
+- View news
+
+Citizen CANNOT:
+- Edit complaints
+- Access admin/staff panel
+- Manage ideas/news
+
+----------------------------------
+🔐 AUTH SYSTEM
+----------------------------------
+
+- Signup required for citizens
+- Login for all roles
+- Role-based redirect:
+  - admin → admin.html
+  - staff → staff.html
+  - citizen → citizen.html
+
+----------------------------------
+🧾 COMPLAINT SYSTEM
+----------------------------------
+
+- Auto Track ID:
+  Format: K4-<timestamp>-<random>
+- Fields:
+  Name, Phone, Palika, Ward, Category, Description
+- Stored in localStorage
+- Only admin/staff can update status
+
+----------------------------------
+💡 IDEAS SYSTEM
+----------------------------------
+
+- Citizens submit ideas
+- Admin can:
+  - View ideas
+  - Delete ideas
+
+----------------------------------
+📰 NEWS SYSTEM
+----------------------------------
+
+- Only ADMIN can:
+  - Create news
+  - Edit news
+  - Delete news
+- Citizens and staff can only VIEW news
+
+----------------------------------
+🚨 CORRUPTION SYSTEM
+----------------------------------
+
+- Separate submission
+- Stored separately
+- Triggers alert:
+  localStorage → "corruptionAlert" = true
+- Admin & Leader see 🔴 notification
+
+----------------------------------
+📁 FILE STRUCTURE
+----------------------------------
+
+- index.html (login)
+- signup.html
+- admin.html
+- staff.html
+- citizen.html
+- news.html
+- ideas.html
+- complaints.html
+- style.css
+- auth.js
+- admin.js
+- staff.js
+- citizen.js
+
+----------------------------------
+⚙️ TECH REQUIREMENTS
+----------------------------------
+
+- Use localStorage for storage
+- Use FileReader for images
+- Mobile responsive UI
+- Clean modern design
+- Role-based UI hiding (buttons visible based on role)
+
+----------------------------------
+🎯 FINAL OUTPUT
+----------------------------------
+
+- Fully working government-style app
+- Admin-controlled system
+- Citizen interaction system
+- Secure role-based logic
+- Replit-ready project
