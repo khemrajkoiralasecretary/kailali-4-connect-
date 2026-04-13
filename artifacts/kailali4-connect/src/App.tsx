@@ -16,6 +16,7 @@ import NewsNew from "@/pages/NewsNew";
 import Directory from "@/pages/Directory";
 import Team from "@/pages/Team";
 import Admin from "@/pages/Admin";
+import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ function Router() {
         <Route path="/news" component={News} />
         <Route path="/directory" component={Directory} />
         <Route path="/team" component={Team} />
+        <Route path="/about" component={About} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>

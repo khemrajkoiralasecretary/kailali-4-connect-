@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
-import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, ShieldCheck, Menu, X, Facebook, Youtube, Globe } from "lucide-react";
+import { LayoutDashboard, FileText, Lightbulb, Newspaper, Map, Users, ShieldCheck, Menu, X, Facebook, Youtube, Globe, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useGetSocialLinks } from "@workspace/api-client-react";
@@ -23,6 +23,7 @@ export default function Layout({ children }: LayoutProps) {
     { href: "/news", label: t("nav.news"), icon: Newspaper },
     { href: "/directory", label: t("nav.directory"), icon: Map },
     { href: "/team", label: t("nav.team"), icon: Users },
+    { href: "/about", label: t("nav.about") ?? "About", icon: Info },
   ];
 
   const isActive = (href: string) => {

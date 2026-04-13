@@ -251,6 +251,7 @@ function ComplaintsTab({ role }: { role: AdminRole }) {
 
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterPalika, setFilterPalika] = useState<string>("");
+  const [filterWard, setFilterWard]     = useState<string>("");
   const [search, setSearch] = useState("");
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -271,9 +272,10 @@ function ComplaintsTab({ role }: { role: AdminRole }) {
 
   const filtered = complaints.filter(c => {
     const matchPalika = !filterPalika || c.palika === filterPalika;
+    const matchWard   = !filterWard   || String(c.ward) === filterWard;
     const matchSearch = !search || c.name?.toLowerCase().includes(search.toLowerCase()) ||
       c.description?.toLowerCase().includes(search.toLowerCase());
-    return matchPalika && matchSearch;
+    return matchPalika && matchWard && matchSearch;
   });
 
   const cycleStatus = (id: number, current: string) => {
@@ -306,11 +308,22 @@ function ComplaintsTab({ role }: { role: AdminRole }) {
         </select>
         <select
           value={filterPalika}
-          onChange={(e) => setFilterPalika(e.target.value)}
+          onChange={(e) => { setFilterPalika(e.target.value); setFilterWard(""); }}
           className="px-2 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none"
         >
           <option value="">{language === "NP" ? "सबै पालिका" : "All Palika"}</option>
           {PALIKAS.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <select
+          value={filterWard}
+          onChange={(e) => setFilterWard(e.target.value)}
+          disabled={!filterPalika}
+          className="px-2 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none disabled:opacity-50"
+        >
+          <option value="">{language === "NP" ? "सबै वडा" : "All Wards"}</option>
+          {(filterPalika ? WARD_MAP[filterPalika] ?? [] : []).map(w => (
+            <option key={w} value={String(w)}>Ward {w}</option>
+          ))}
         </select>
         {isSuperAdmin && (
           !confirmDeleteAll ? (
