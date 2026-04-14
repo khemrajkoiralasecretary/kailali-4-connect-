@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 const TOKEN_KEY   = "k4-citizen-token";
 const PROFILE_KEY = "k4-citizen-profile";
@@ -39,8 +38,8 @@ export function CitizenAuthProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    setAuthTokenGetter(() => localStorage.getItem(TOKEN_KEY));
-    return () => setAuthTokenGetter(null);
+    
+    return () => (null);
   }, []);
 
   const setCitizenSession = (tok: string, profile: CitizenProfile) => {

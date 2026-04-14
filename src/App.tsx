@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import { CitizenAuthProvider } from "@/lib/citizenAuth";
-import { setAdminTokenGetter } from "@workspace/api-client-react";
 import Layout from "@/components/Layout";
 
 import Dashboard from "@/pages/Dashboard";
@@ -62,8 +61,6 @@ function Router() {
     </Layout>
   );
 }
-
-setAdminTokenGetter(() => sessionStorage.getItem("k4-admin-token"));
 
 function ThemeInit() {
   useEffect(() => {
