@@ -1,16 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Kailali-4 Connect</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kailali-4 Secretariat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .header { background: #d32f2f; color: white; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>कैलाली क्षेत्र नं. ४ सचिवालय</h2>
+        <p>डिजिटल प्रणालीमा स्वागत छ</p>
+    </div>
+    <div class="container mt-4">
+        <div class="card p-4 shadow">
+            <h5>गुनासो दर्ता फारम</h5>
+            <hr>
+            <div class="mb-3">
+                <label class="form-label">नगरपालिका/गाउँपालिका</label>
+                <select class="form-select">
+                    <option>गोदावरी नगरपालिका</option>
+                    <option>गौरीगंगा नगरपालिका</option>
+                    <option>चुरे गाउँपालिका</option>
+                    <option>मोहन्याल गाउँपालिका</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">वडा नम्बर</label>
+                <input type="number" class="form-control" placeholder="वडा नम्बर">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">गुनासो विवरण</label>
+                <textarea class="form-control" rows="3"></textarea>
+            </div>
+            <button class="btn btn-danger w-100">दर्ता गर्नुहोस्</button>
+        </div>
+    </div>
+</body>
 </html>
